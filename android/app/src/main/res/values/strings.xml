@@ -1,0 +1,4 @@
+<resources>
+    <string name="gesture_label">Gestos de navegación</string>
+    <string name="gesture_desc">Gestos de pantalla completa del launcher: desliza desde los bordes para ir Atrás, desde abajo para ir a Inicio, y desliza hacia arriba y mantén para ver las apps recientes. No lee ni guarda nada de lo que hay en pantalla.</string>
+</resources>

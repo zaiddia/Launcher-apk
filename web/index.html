@@ -271,6 +271,7 @@ body.sheetOpen #sheet{transform:none}
     <section class="pg on" data-p="home">
       <div class="secT"><b data-t="dev"></b><button class="rbtn" id="gear" aria-label="Ajustes"></button></div>
       <ul class="info" id="dinfo"></ul>
+      <div id="gCard"></div>
       <div class="grid" id="grid"></div>
       <p class="hint" data-t="longpress"></p>
     </section>
@@ -831,7 +832,7 @@ function renderSet(){
   <div class="row"><span>${esc(t.h24)}</span><button class="sw ${S.h24?'on':''}" id="sw24"></button></div>
   <div class="row"><span>${esc(t.unit)}</span><div class="seg" style="width:120px"><button data-u="C" class="${S.unit==='C'?'on':''}">°C</button><button data-u="F" class="${S.unit==='F'?'on':''}">°F</button></div></div>
   <div class="sh3">${esc(t.device)}</div>
-  ${NATIVE?`<button class="btn" id="hmB" style="width:100%">${ic('home')} ${esc(t.setHome)}</button>`:`<div class="two"><label class="fld"><span>RAM</span><input id="sRam" value="${esc(S.ram)}" placeholder="${esc(t.ramH)}"></label><label class="fld"><span>${esc(t.sto)}</span><input id="sSto" value="${esc(S.sto)}" placeholder="${esc(t.stoH)}"></label></div>`}
+  ${NATIVE?`<button class="btn" id="hmB" style="width:100%">${ic('home')} ${esc(t.setHome)}</button><button class="btn alt" id="gsB" style="width:100%;margin-top:10px">👆 ${esc(GX.t)}</button>`:`<div class="two"><label class="fld"><span>RAM</span><input id="sRam" value="${esc(S.ram)}" placeholder="${esc(t.ramH)}"></label><label class="fld"><span>${esc(t.sto)}</span><input id="sSto" value="${esc(S.sto)}" placeholder="${esc(t.stoH)}"></label></div>`}
   <button class="btn alt" id="fsB" style="width:100%;margin-top:6px">${ic('full')} ${esc(t.fullscreen)}</button>
   <button class="btn alt" id="rsB" style="width:100%;margin-top:10px;color:#c00">${esc(t.reset)}</button>
   <p class="foot">Launcher CY · v1.1 · ${NATIVE?'APK':'Web'}<br>Clima: Open-Meteo · Ubicación: BigDataCloud</p>`;
@@ -845,6 +846,7 @@ function renderSet(){
   $('#sw24').onclick=()=>{S.h24=!S.h24;save();tick();renderSet()};
   $$('#setIn [data-u]').forEach(b=>b.onclick=()=>{S.unit=b.dataset.u;save();renderSet();if(S.wxLoc)loadWx(true)});
   if($('#hmB'))$('#hmB').onclick=()=>Android.setDefaultLauncher();
+  if($('#gsB'))$('#gsB').onclick=()=>{closeSet();gestureSheet()};
   $('#fsB').onclick=()=>{const d=document.documentElement;(document.fullscreenElement?document.exitFullscreen():d.requestFullscreen({navigationUI:'hide'})).catch(()=>{})};
   $('#rsB').onclick=async e=>{const b=e.currentTarget;if(!b._armed){b._armed=true;toast(T().sure);setTimeout(()=>b._armed=false,2500);return}
     try{localStorage.removeItem(KEY);indexedDB.deleteDatabase('cyMusic')}catch(x){}location.reload()};
@@ -862,6 +864,72 @@ $('#sheet').addEventListener('click',e=>{if(e.target.closest('[data-x]'))closeSh
 $('#scrim').onclick=()=>{if(document.body.classList.contains('sheetOpen'))closeSheet();else closeSet()};
 window.addEventListener('popstate',()=>{closeSheet();closeSet()});
 
+/* ---------- GESTOS DE NAVEGACIÓN (APK) ---------- */
+const hasN=m=>{try{return NATIVE&&typeof Android[m]==='function'}catch(e){return false}};
+const GXES={
+ t:'Gestos de navegación',on:'✅ Gestos activos',off:'Gestos desactivados',
+ onTxt:'Ya puedes navegar con gestos en todo el celular.',
+ offTxt:'HyperOS apaga sus gestos cuando usas un launcher que no es el de Xiaomi. Este launcher trae los suyos:<br>1. Toca <b>Activar gestos</b> → <b>Apps instaladas</b> (o Servicios descargados) → <b>Gestos de navegación</b> → actívalo.<br>2. Si sale <b>"Ajuste restringido"</b>: toca <b>Permitir ajustes restringidos</b> → menú ⋮ arriba a la derecha → <b>Permitir ajustes restringidos</b> y repite el paso 1.<br>3. En esa misma pantalla de la app activa <b>Inicio automático</b> y pon <b>Ahorro de batería → Sin restricciones</b> para que los gestos no se apaguen.',
+ act:'Activar gestos',restr:'Permitir ajustes restringidos',
+ back:'Atrás',backS:'Desliza desde el borde izquierdo o derecho',side:'Borde para Atrás',both:'Ambos',left:'Izq.',right:'Der.',
+ home:'Inicio y recientes',homeS:'Desliza hacia arriba desde abajo · sube y mantén = recientes',
+ quick:'App anterior',quickS:'Desliza hacia un lado sobre la barra de abajo',
+ pill:'Mostrar barrita inferior',pillS:'Como en iPhone',sens:'Tamaño de la zona',lo:'Fina',mid:'Normal',hi:'Ancha',
+ hideT:'Ocultar los botones del sistema',
+ hideNo:'Xiaomi no deja que una app oculte los 3 botones sin un permiso especial. Se concede <b>una sola vez</b>, desde un computador con ADB (o desde el mismo celular con la <b>depuración inalámbrica</b> y una app como LADB):',
+ copy:'Copiar comando',copied:'Copiado',hide:'Ocultar botones',hideS:'Si no desaparecen, reinicia el celular',
+ help:'Cómo se usa',helpTxt:'← → desde un borde: Atrás<br>↑ desde abajo: Inicio<br>↑ y mantener: Apps recientes<br>↔ sobre la barra de abajo: App anterior<br>↓ en la parte de arriba del launcher: Notificaciones',
+ card:'Activa los gestos de pantalla completa',cardB:'Configurar gestos',fail:'No se pudo cambiar'
+},GXEN={
+ t:'Navigation gestures',on:'✅ Gestures on',off:'Gestures off',
+ onTxt:'You can now navigate with gestures across the whole phone.',
+ offTxt:'HyperOS turns off its gestures with third-party launchers. This launcher brings its own:<br>1. Tap <b>Turn on gestures</b> → <b>Installed apps</b> (or Downloaded services) → <b>Navigation gestures</b> → turn it on.<br>2. If you see <b>"Restricted setting"</b>: tap <b>Allow restricted settings</b> → ⋮ menu → <b>Allow restricted settings</b>, then repeat step 1.<br>3. On that app screen enable <b>Autostart</b> and set <b>Battery saver → No restrictions</b>.',
+ act:'Turn on gestures',restr:'Allow restricted settings',
+ back:'Back',backS:'Swipe in from the left or right edge',side:'Back edge',both:'Both',left:'Left',right:'Right',
+ home:'Home & recents',homeS:'Swipe up from the bottom · swipe up and hold = recents',
+ quick:'Previous app',quickS:'Swipe sideways on the bottom bar',
+ pill:'Show bottom handle',pillS:'iPhone style',sens:'Touch zone size',lo:'Thin',mid:'Normal',hi:'Wide',
+ hideT:'Hide the system buttons',
+ hideNo:'Xiaomi does not let an app hide the 3 buttons without a special permission. Grant it <b>once</b> from a computer with ADB (or from the phone itself with <b>wireless debugging</b> and an app like LADB):',
+ copy:'Copy command',copied:'Copied',hide:'Hide buttons',hideS:'If they stay, restart the phone',
+ help:'How to use',helpTxt:'← → from an edge: Back<br>↑ from the bottom: Home<br>↑ and hold: Recent apps<br>↔ on the bottom bar: Previous app<br>↓ at the top of the launcher: Notifications',
+ card:'Turn on full-screen gestures',cardB:'Set up gestures',fail:'Could not change it'
+};
+Object.defineProperty(window,'GX',{get:()=>S.lang==='es'||S.lang==='pt'?GXES:GXEN});
+function gStatus(){try{return JSON.parse(Android.gestureStatus())}catch(e){return null}}
+function gestureSheet(){
+  if(!hasN('gestureStatus'))return;const g=gStatus();if(!g)return;window._gOpen=true;
+  const on=g.service&&g.running,X=GX;
+  const sw=(k,l,s)=>`<div class="row"><span>${l}${s?`<br><small style="font-size:11.5px;opacity:.6">${s}</small>`:''}</span><button class="sw ${g[k]?'on':''}" data-g="${k}"></button></div>`;
+  const seg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button data-gk="${k}" data-gv="${v}" class="${String(g[k])===String(v)?'on':''}">${l}</button>`).join('')}</div>`;
+  const cmd=`adb shell pm grant ${g.pkg} android.permission.WRITE_SECURE_SETTINGS`;
+  const box='border-radius:14px;padding:12px 14px;margin:6px 0 12px;font-size:13px;line-height:1.5';
+  sheet(`<h3>${X.t}</h3>
+  <div style="${box};background:${on?'#dff3e4':'#fff0e3'};color:#111"><b style="font-size:14px">${on?X.on:X.off}</b><br>${on?X.onTxt:X.offTxt}
+   ${on?'':`<button class="btn" id="gOn" style="width:100%;margin-top:10px">${X.act}</button><button class="btn alt" id="gRs" style="width:100%;margin-top:8px">${X.restr}</button>`}</div>
+  ${sw('back',X.back,X.backS)}
+  <div class="row"><span>${X.side}</span>${seg('side',[['left',X.left],['both',X.both],['right',X.right]])}</div>
+  ${sw('home',X.home,X.homeS)}${sw('quick',X.quick,X.quickS)}${sw('pill',X.pill,X.pillS)}
+  <div class="row"><span>${X.sens}</span>${seg('sens',[[0.75,X.lo],[1,X.mid],[1.4,X.hi]])}</div>
+  <div style="font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin:18px 0 6px">${X.hideT}</div>
+  ${g.canHide?sw('navHidden',X.hide,X.hideS):`<div style="${box};background:#fff;color:#111">${X.hideNo}<code style="display:block;background:#111;color:#9ef0b0;border-radius:10px;padding:10px;margin:8px 0;font-size:11.5px;word-break:break-all;-webkit-user-select:all;user-select:all">${cmd}</code><button class="btn alt" id="gCp" style="width:100%">${X.copy}</button></div>`}
+  <div style="font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin:18px 0 6px">${X.help}</div>
+  <div style="${box};background:#fff;color:#111">${X.helpTxt}</div>`);
+  const I=$('#sheetIn');
+  if($('#gOn'))$('#gOn').onclick=()=>Android.openAccessibility();
+  if($('#gRs'))$('#gRs').onclick=()=>Android.openAppInfo(g.pkg);
+  if($('#gCp'))$('#gCp').onclick=()=>{try{navigator.clipboard.writeText(cmd).then(()=>toast(X.copied),()=>toast(cmd))}catch(e){toast(cmd)}};
+  I.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{const k=b.dataset.g,v=!g[k];
+    if(k==='navHidden'){if(!Android.setNavHidden(v))toast(X.fail)}else Android.setGestureConfig(JSON.stringify({[k]:v}));gestureSheet();renderGCard()});
+  I.querySelectorAll('[data-gk]').forEach(b=>b.onclick=()=>{const k=b.dataset.gk,v=k==='sens'?parseFloat(b.dataset.gv):b.dataset.gv;Android.setGestureConfig(JSON.stringify({[k]:v}));gestureSheet()});
+}
+function renderGCard(){const el=$('#gCard');if(!el)return;if(!hasN('gestureStatus')){el.innerHTML='';return}const g=gStatus();
+  if(!g||(g.service&&g.running)){el.innerHTML='';return}
+  el.innerHTML=`<div style="display:flex;align-items:center;gap:10px;background:#111;color:#fff;border-radius:16px;padding:12px 14px;margin:14px 0 4px"><span style="font-size:22px">👆</span><span style="flex:1;font-size:13px;font-weight:600;line-height:1.3">${GX.card}</span><button id="gCardB" style="background:#fff;color:#111;border-radius:10px;padding:8px 10px;font-weight:700;font-size:12px">${GX.cardB}</button></div>`;
+  $('#gCardB').onclick=gestureSheet}
+function swipeDownNotif(el){if(!el)return;let sy=0,sx=0,t0=0;el.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;sx=e.touches[0].clientX;t0=Date.now()},{passive:true});
+  el.addEventListener('touchend',e=>{const t=e.changedTouches[0];if(t.clientY-sy>70&&Math.abs(t.clientX-sx)<60&&Date.now()-t0<700&&hasN('openNotifications'))Android.openNotifications()},{passive:true})}
+
 /* ============ LANG ============ */
 function applyLang(){
   const t=T();document.documentElement.lang=S.lang;
@@ -871,13 +939,13 @@ function applyLang(){
 
 /* ============ BOOT ============ */
 applyTheme();document.body.classList.toggle('nonav',!S.nav);
-applyLang();renderGrid();readDevice();loadSongs();
+applyLang();renderGrid();readDevice();loadSongs();renderGCard();swipeDownNotif($('header'));
 setInterval(tick,1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){tick();if(S.page==='wx')loadWx(false)}});
 if(S.wxLoc)setTimeout(()=>loadWx(false),800);
 window.onAndroidBack=()=>{if(document.body.classList.contains('sheetOpen'))closeSheet();else if(document.body.classList.contains('setOpen'))closeSet();else if(S.page!=='home')go('home')};
 window.onAndroidHome=()=>{closeSheet();closeSet();go('home');$$('.pg').forEach(p=>p.scrollTop=0)};
-window.onAndroidResume=()=>{INST=null;tick();if(NATIVE)nativeRefresh();if(S.page==='wx')loadWx(false)};
+window.onAndroidResume=()=>{renderGCard();if(window._gOpen&&document.body.classList.contains('sheetOpen')&&$('#sheetIn [data-g]'))gestureSheet();INST=null;tick();if(NATIVE)nativeRefresh();if(S.page==='wx')loadWx(false)};
 if(NATIVE&&!S.homeAsked){S.homeAsked=true;save();try{if(!Android.isDefaultLauncher())setTimeout(()=>{const t=T();sheet(`<h3>${esc(t.setHome)}</h3><p style="font-size:14px;margin-bottom:16px">${esc(t.setHomeHint)}</p><div class="acts"><button class="btn alt" data-x>${esc(t.cancel)}</button><button class="btn" id="hm2">${ic('home')} OK</button></div>`);$('#hm2').onclick=()=>{closeSheet();Android.setDefaultLauncher()}},1200)}catch(e){}}
 if(!NATIVE&&'serviceWorker'in navigator&&(location.protocol==='https:'||location.hostname==='localhost')){navigator.serviceWorker.register('sw.js').catch(()=>{})}
 </script>

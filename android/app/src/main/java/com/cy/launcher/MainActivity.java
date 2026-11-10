@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
+import android.accessibilityservice.AccessibilityService;
 import android.content.ClipData;
+import android.content.SharedPreferences;
 import android.content.ContentUris;
 import android.database.Cursor;
 import android.media.AudioManager;
@@ -503,6 +505,74 @@ public class MainActivity extends Activity {
                 } catch (Exception ignored) { }
             }
             return max; // MHz, -1 si el sistema no lo permite
+        }
+
+        /* ---------- Gestos de navegación ---------- */
+        @JavascriptInterface
+        public String gestureStatus() {
+            JSONObject o = new JSONObject();
+            try {
+                String enabled = Settings.Secure.getString(getContentResolver(), Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES);
+                boolean on = enabled != null && enabled.contains(getPackageName() + "/");
+                o.put("service", on);
+                o.put("running", GestureService.instance != null);
+                o.put("canHide", checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS") == PackageManager.PERMISSION_GRANTED);
+                o.put("navHidden", Settings.Global.getInt(getContentResolver(), "force_fsg_nav_bar", 0) == 1);
+                o.put("pkg", getPackageName());
+                SharedPreferences p = getSharedPreferences(GestureService.PREFS, MODE_PRIVATE);
+                o.put("enabled", p.getBoolean("enabled", true));
+                o.put("back", p.getBoolean("back", true));
+                o.put("home", p.getBoolean("home", true));
+                o.put("quick", p.getBoolean("quick", true));
+                o.put("pill", p.getBoolean("pill", true));
+                o.put("side", p.getString("side", "both"));
+                o.put("sens", p.getFloat("sens", 1f));
+            } catch (Exception ignored) { }
+            return o.toString();
+        }
+
+        @JavascriptInterface
+        public void setGestureConfig(String json) {
+            try {
+                JSONObject o = new JSONObject(json);
+                SharedPreferences.Editor e = getSharedPreferences(GestureService.PREFS, MODE_PRIVATE).edit();
+                if (o.has("enabled")) e.putBoolean("enabled", o.getBoolean("enabled"));
+                if (o.has("back")) e.putBoolean("back", o.getBoolean("back"));
+                if (o.has("home")) e.putBoolean("home", o.getBoolean("home"));
+                if (o.has("quick")) e.putBoolean("quick", o.getBoolean("quick"));
+                if (o.has("pill")) e.putBoolean("pill", o.getBoolean("pill"));
+                if (o.has("side")) e.putString("side", o.getString("side"));
+                if (o.has("sens")) e.putFloat("sens", (float) o.getDouble("sens"));
+                e.apply();
+                GestureService.reload();
+            } catch (Exception ignored) { }
+        }
+
+        @JavascriptInterface
+        public void openAccessibility() {
+            runOnUiThread(() -> {
+                try { startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public boolean setNavHidden(boolean hide) {
+            try {
+                return Settings.Global.putInt(getContentResolver(), "force_fsg_nav_bar", hide ? 1 : 0);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void openNotifications() {
+            runOnUiThread(() -> {
+                if (GestureService.action(AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS)) return;
+                try {
+                    Object sb = getSystemService("statusbar");
+                    Class.forName("android.app.StatusBarManager").getMethod("expandNotificationsPanel").invoke(sb);
+                } catch (Exception ignored) { }
+            });
         }
 
         /* ---------- Música del sistema (Spotify, YouTube Music, etc.) ---------- */

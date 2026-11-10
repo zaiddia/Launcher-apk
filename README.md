@@ -22,6 +22,28 @@ Son apps distintas: puedes instalar las dos y elegir cuál usar como inicio.
 
 Cada vez que se sube un cambio a `main`, GitHub compila los APK solo. Cada APK nuevo se instala encima del anterior y conserva tus datos.
 
+### Gestos de navegación (pantalla completa)
+HyperOS apaga sus gestos cuando el launcher no es el de Xiaomi, así que los dos launchers traen **sus propios gestos**, que funcionan en todas las apps:
+
+| Gesto | Acción |
+|---|---|
+| Deslizar desde el borde izquierdo o derecho | Atrás |
+| Deslizar hacia arriba desde abajo | Inicio |
+| Deslizar hacia arriba y mantener | Apps recientes |
+| Deslizar de lado sobre la barra de abajo | App anterior |
+| Deslizar hacia abajo arriba del launcher | Notificaciones |
+
+**Activarlos:** en el launcher toca **Configurar gestos** (o Ajustes → Gestos) → **Activar gestos** → Apps instaladas → *Gestos de navegación* → activar.
+- Si aparece **"Ajuste restringido"**: Info de la app → ⋮ → **Permitir ajustes restringidos**, y repite.
+- En Info de la app activa **Inicio automático** y **Batería → Sin restricciones**.
+
+**Ocultar los 3 botones (opcional, una sola vez):** concede este permiso por ADB (computador o depuración inalámbrica):
+```
+adb shell pm grant com.cy.launcher27 android.permission.WRITE_SECURE_SETTINGS
+adb shell pm grant com.cy.launcher android.permission.WRITE_SECURE_SETTINGS
+```
+Luego activa **Ocultar botones** en la pantalla de gestos.
+
 ### Funciones de Launcher 27 (APK)
 - **Inicio:** reloj gigante (tócalo para abrir alarmas), modelo, Android y HyperOS, procesador, RAM y almacenamiento reales, y batería con nivel, temperatura y tiempo restante. Los puntos de color cambian el tema.
 - **Apps:** 10 favoritas (mantén presionado un ícono para cambiarlo), todas tus apps instaladas y el mapa con tu ubicación.
