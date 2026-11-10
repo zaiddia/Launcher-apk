@@ -1,0 +1,17 @@
+{
+  "name": "Launcher 27",
+  "short_name": "Launcher 27",
+  "description": "Pantalla de inicio estilo iOS 27: reloj gigante, mapa, música con letras y calendario",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "portrait",
+  "background_color": "#1E2421",
+  "theme_color": "#1E2421",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

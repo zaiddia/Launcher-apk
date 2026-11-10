@@ -1,4 +1,4 @@
-name: Compilar APK
+name: Compilar APKs
 
 on:
   push:
@@ -21,30 +21,35 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Compilar APK
+      - name: Compilar APKs
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleKustomRelease assembleIos27Release --no-daemon --stacktrace
 
       - name: Renombrar APK
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/release/app-release.apk out/Launcher-CY.apk
+          cp android/app/build/outputs/apk/kustom/release/app-kustom-release.apk out/Launcher-CY.apk
+          cp android/app/build/outputs/apk/ios27/release/app-ios27-release.apk out/Launcher-27.apk
           ls -la out
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Launcher-CY-apk
-          path: out/Launcher-CY.apk
+          name: Launcher-apks
+          path: out/*.apk
 
       - name: Publicar en Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.${{ github.run_number }}
-          name: Launcher CY v1.1.${{ github.run_number }}
+          tag_name: v1.2.${{ github.run_number }}
+          name: Launchers v1.2.${{ github.run_number }}
           make_latest: true
-          files: out/Launcher-CY.apk
+          files: |
+            out/Launcher-CY.apk
+            out/Launcher-27.apk
           body: |
-            Descarga **Launcher-CY.apk** en tu celular e instálalo.
-            Luego: Ajustes → Apps → Apps predeterminadas → App de inicio → **Launcher CY**.
+            - **Launcher-27.apk**: tema estilo iOS 27 (reloj gigante, mapa, música con letras, calendario).
+            - **Launcher-CY.apk**: tema estilo KLWP (cabecera negra con esquina doblada).
+
+            Instala el que quieras (o los dos). Luego: Ajustes → Apps → Apps predeterminadas → App de inicio.

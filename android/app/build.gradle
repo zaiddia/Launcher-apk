@@ -13,7 +13,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode runNumber
-        versionName "1.1.${runNumber}"
+        versionName "1.2.${runNumber}"
     }
 
     // Llave de firma fija para que cada APK nuevo se instale como actualización.
@@ -37,11 +37,28 @@ android {
         }
     }
 
-    // La interfaz se toma directamente de la carpeta /web del repositorio.
-    sourceSets {
-        main {
-            assets.srcDirs = ['src/main/assets', '../../web']
+    // Dos temas = dos apps independientes (se pueden instalar las dos a la vez)
+    flavorDimensions 'theme'
+    productFlavors {
+        kustom {
+            dimension 'theme'
+            resValue 'string', 'app_name', 'Launcher CY'
         }
+        ios27 {
+            dimension 'theme'
+            applicationId 'com.cy.launcher27'
+            resValue 'string', 'app_name', 'Launcher 27'
+        }
+    }
+
+    // La interfaz de cada tema se toma de su carpeta del repositorio.
+    sourceSets {
+        kustom { assets.srcDirs = ['../../web'] }
+        ios27 { assets.srcDirs = ['../../web27'] }
+    }
+
+    buildFeatures {
+        resValues true
     }
 
     compileOptions {

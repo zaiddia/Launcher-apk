@@ -3,7 +3,7 @@ name: Publicar versión web
 on:
   push:
     branches: [main]
-    paths: ['web/**', '.github/workflows/pages.yml']
+    paths: ['web/**', 'web27/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -24,8 +24,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Armar sitio (web en / y web27 en /ios27/)
+        run: |
+          mkdir -p site
+          cp -r web/. site/
+          mkdir -p site/ios27
+          cp -r web27/. site/ios27/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: site
       - id: deployment
         uses: actions/deploy-pages@v4

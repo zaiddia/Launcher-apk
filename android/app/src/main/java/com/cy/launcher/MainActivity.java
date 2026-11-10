@@ -5,6 +5,16 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.ActivityNotFoundException;
 import android.content.ClipData;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.media.AudioManager;
+import android.media.MediaMetadata;
+import android.media.session.MediaController;
+import android.media.session.MediaSessionManager;
+import android.media.session.PlaybackState;
+import android.os.SystemClock;
+import android.provider.AlarmClock;
+import android.provider.CalendarContract;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -42,7 +52,9 @@ import androidx.webkit.WebViewAssetLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.FileReader;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,6 +68,9 @@ public class MainActivity extends Activity {
     private static final String START_URL = "https://" + HOST + "/assets/index.html";
     private static final int REQ_FILE = 11;
     private static final int REQ_LOC = 12;
+    private static final int REQ_CAL = 13;
+    private String artKey = "";
+    private String artData = "";
 
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
@@ -149,6 +164,9 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == REQ_CAL) {
+            js("window.onCalendarPermission&&window.onCalendarPermission()");
+        }
         if (requestCode == REQ_LOC && geoCallback != null) {
             geoCallback.invoke(geoOrigin, hasLocation(), false);
             geoCallback = null;
@@ -230,6 +248,30 @@ public class MainActivity extends Activity {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    private MediaController activeController() {
+        try {
+            MediaSessionManager m = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+            List<MediaController> list = m.getActiveSessions(new ComponentName(this, MediaListener.class));
+            if (list == null || list.isEmpty()) return null;
+            for (MediaController c : list) {
+                PlaybackState st = c.getPlaybackState();
+                if (st != null && st.getState() == PlaybackState.STATE_PLAYING) return c;
+            }
+            return list.get(0);
+        } catch (Exception e) {
+            return null; // sin acceso a notificaciones
+        }
+    }
+
+    private String bitmapToDataUrl(Bitmap src, int max) {
+        int w = src.getWidth(), h = src.getHeight();
+        float k = Math.min(1f, (float) max / Math.max(w, h));
+        Bitmap b = k < 1f ? Bitmap.createScaledBitmap(src, Math.round(w * k), Math.round(h * k), true) : src;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        b.compress(Bitmap.CompressFormat.JPEG, 85, out);
+        return "data:image/jpeg;base64," + Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP);
     }
 
     private String drawableToDataUrl(Drawable d) {
@@ -425,6 +467,171 @@ public class MainActivity extends Activity {
         }
 
         @JavascriptInterface
+        public void setBars(String status, String nav) {
+            runOnUiThread(() -> {
+                try {
+                    Window w = getWindow();
+                    int s = Color.parseColor(status), n = Color.parseColor(nav);
+                    w.setStatusBarColor(s);
+                    w.setNavigationBarColor(n);
+                    View d = w.getDecorView();
+                    int f = d.getSystemUiVisibility();
+                    double ls = (0.2126 * Color.red(s) + 0.7152 * Color.green(s) + 0.0722 * Color.blue(s)) / 255.0;
+                    double ln = (0.2126 * Color.red(n) + 0.7152 * Color.green(n) + 0.0722 * Color.blue(n)) / 255.0;
+                    f = ls > 0.6 ? (f | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR) : (f & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                    f = ln > 0.45 ? (f | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR) : (f & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+                    d.setSystemUiVisibility(f);
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public void openClock() {
+            runOnUiThread(() -> {
+                try { startActivity(new Intent(AlarmClock.ACTION_SHOW_ALARMS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public int cpuFreq() {
+            int max = -1;
+            int n = Runtime.getRuntime().availableProcessors();
+            for (int i = 0; i < n; i++) {
+                try (BufferedReader r = new BufferedReader(new FileReader("/sys/devices/system/cpu/cpu" + i + "/cpufreq/scaling_cur_freq"))) {
+                    int khz = Integer.parseInt(r.readLine().trim());
+                    max = Math.max(max, khz / 1000);
+                } catch (Exception ignored) { }
+            }
+            return max; // MHz, -1 si el sistema no lo permite
+        }
+
+        /* ---------- Música del sistema (Spotify, YouTube Music, etc.) ---------- */
+        @JavascriptInterface
+        public boolean hasMediaAccess() {
+            String f = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+            return f != null && f.contains(getPackageName());
+        }
+
+        @JavascriptInterface
+        public void requestMediaAccess() {
+            runOnUiThread(() -> {
+                try { startActivity(new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public String nowPlaying() {
+            JSONObject o = new JSONObject();
+            try {
+                MediaController c = activeController();
+                if (c == null) return "{}";
+                MediaMetadata md = c.getMetadata();
+                if (md == null) return "{}";
+                String title = md.getString(MediaMetadata.METADATA_KEY_TITLE);
+                String artist = md.getString(MediaMetadata.METADATA_KEY_ARTIST);
+                if (artist == null) artist = md.getString(MediaMetadata.METADATA_KEY_ALBUM_ARTIST);
+                String album = md.getString(MediaMetadata.METADATA_KEY_ALBUM);
+                PlaybackState st = c.getPlaybackState();
+                boolean playing = st != null && st.getState() == PlaybackState.STATE_PLAYING;
+                long pos = 0;
+                if (st != null) {
+                    pos = st.getPosition();
+                    if (playing && st.getLastPositionUpdateTime() > 0) {
+                        pos += (long) ((SystemClock.elapsedRealtime() - st.getLastPositionUpdateTime()) * st.getPlaybackSpeed());
+                    }
+                }
+                o.put("title", title == null ? "" : title);
+                o.put("artist", artist == null ? "" : artist);
+                o.put("album", album == null ? "" : album);
+                o.put("pkg", c.getPackageName());
+                o.put("playing", playing);
+                o.put("pos", pos);
+                o.put("dur", md.getLong(MediaMetadata.METADATA_KEY_DURATION));
+                Bitmap art = md.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART);
+                if (art == null) art = md.getBitmap(MediaMetadata.METADATA_KEY_ART);
+                if (art == null) art = md.getBitmap(MediaMetadata.METADATA_KEY_DISPLAY_ICON);
+                String key = art == null ? "" : (title + "|" + artist + "|" + art.getWidth() + "x" + art.getHeight());
+                if (!key.equals(artKey)) {
+                    artKey = key;
+                    artData = art == null ? "" : bitmapToDataUrl(art, 512);
+                }
+                o.put("artKey", artKey);
+            } catch (Exception e) {
+                return "{}";
+            }
+            return o.toString();
+        }
+
+        @JavascriptInterface
+        public String nowPlayingArt() {
+            return artData;
+        }
+
+        @JavascriptInterface
+        public void mediaCmd(String cmd, double arg) {
+            runOnUiThread(() -> {
+                MediaController c = activeController();
+                if (c == null) return;
+                MediaController.TransportControls t = c.getTransportControls();
+                PlaybackState st = c.getPlaybackState();
+                boolean playing = st != null && st.getState() == PlaybackState.STATE_PLAYING;
+                switch (cmd) {
+                    case "toggle": if (playing) t.pause(); else t.play(); break;
+                    case "play": t.play(); break;
+                    case "pause": t.pause(); break;
+                    case "next": t.skipToNext(); break;
+                    case "prev": t.skipToPrevious(); break;
+                    case "seek": t.seekTo((long) arg); break;
+                    default: break;
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void volume(int dir) {
+            runOnUiThread(() -> {
+                AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                am.adjustStreamVolume(AudioManager.STREAM_MUSIC, dir > 0 ? AudioManager.ADJUST_RAISE : AudioManager.ADJUST_LOWER, AudioManager.FLAG_SHOW_UI);
+            });
+        }
+
+        /* ---------- Calendario del celular ---------- */
+        @JavascriptInterface
+        public boolean hasCalendar() {
+            return checkSelfPermission(Manifest.permission.READ_CALENDAR) == PackageManager.PERMISSION_GRANTED;
+        }
+
+        @JavascriptInterface
+        public void requestCalendar() {
+            runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.READ_CALENDAR}, REQ_CAL));
+        }
+
+        @JavascriptInterface
+        public String calendarEvents(int days) {
+            JSONArray arr = new JSONArray();
+            if (!hasCalendar()) return arr.toString();
+            long now = System.currentTimeMillis() - 86400000L;
+            Uri.Builder b = CalendarContract.Instances.CONTENT_URI.buildUpon();
+            ContentUris.appendId(b, now);
+            ContentUris.appendId(b, now + days * 86400000L);
+            String[] cols = {CalendarContract.Instances.EVENT_ID, CalendarContract.Instances.TITLE,
+                    CalendarContract.Instances.BEGIN, CalendarContract.Instances.END, CalendarContract.Instances.ALL_DAY};
+            try (Cursor c = getContentResolver().query(b.build(), cols, null, null, CalendarContract.Instances.BEGIN + " ASC")) {
+                int n = 0;
+                while (c != null && c.moveToNext() && n++ < 60) {
+                    JSONObject o = new JSONObject();
+                    o.put("id", c.getLong(0));
+                    o.put("t", c.getString(1));
+                    o.put("b", c.getLong(2));
+                    o.put("e", c.getLong(3));
+                    o.put("a", c.getInt(4) == 1);
+                    arr.put(o);
+                }
+            } catch (Exception ignored) { }
+            return arr.toString();
+        }
+
+        @JavascriptInterface
         public String battery() {
             JSONObject o = new JSONObject();
             try {
@@ -434,6 +641,12 @@ public class MainActivity extends Activity {
                 int status = b != null ? b.getIntExtra(BatteryManager.EXTRA_STATUS, -1) : -1;
                 o.put("level", level >= 0 ? Math.round(level * 100f / scale) : 0);
                 o.put("charging", status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);
+                int temp = b != null ? b.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) : -1;
+                if (temp > 0) o.put("temp", temp / 10.0);
+                if (Build.VERSION.SDK_INT >= 28) {
+                    BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
+                    o.put("chargeLeft", bm.computeChargeTimeRemaining());
+                }
             } catch (Exception ignored) {
             }
             return o.toString();
