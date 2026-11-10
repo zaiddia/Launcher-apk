@@ -1,0 +1,50 @@
+name: Compilar APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compilar APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Renombrar APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/release/app-release.apk out/Launcher-CY.apk
+          ls -la out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Launcher-CY-apk
+          path: out/Launcher-CY.apk
+
+      - name: Publicar en Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.1.${{ github.run_number }}
+          name: Launcher CY v1.1.${{ github.run_number }}
+          make_latest: true
+          files: out/Launcher-CY.apk
+          body: |
+            Descarga **Launcher-CY.apk** en tu celular e instálalo.
+            Luego: Ajustes → Apps → Apps predeterminadas → App de inicio → **Launcher CY**.

@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.application'
+}
+
+def runNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1') as Integer
+
+android {
+    namespace 'com.cy.launcher'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.cy.launcher'
+        minSdk 26
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.1.${runNumber}"
+    }
+
+    // Llave de firma fija para que cada APK nuevo se instale como actualización.
+    // Es solo para uso personal; no la uses para publicar en Play Store.
+    signingConfigs {
+        cy {
+            storeFile file('launcher-cy.keystore')
+            storePassword 'launchercy'
+            keyAlias 'launchercy'
+            keyPassword 'launchercy'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.cy
+        }
+        debug {
+            signingConfig signingConfigs.cy
+        }
+    }
+
+    // La interfaz se toma directamente de la carpeta /web del repositorio.
+    sourceSets {
+        main {
+            assets.srcDirs = ['src/main/assets', '../../web']
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
