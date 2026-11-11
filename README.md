@@ -46,6 +46,12 @@ adb shell pm grant com.cy.launcher android.permission.WRITE_SECURE_SETTINGS
 ```
 Luego activa **Ocultar botones** en la pantalla de gestos.
 
+### Funciones de Launcher CY (APK)
+- **Inicio:** info del dispositivo real (con tiempo de batería restante), accesos rápidos (linterna, Wi-Fi, datos, Bluetooth, sonido, pantalla) y 10 íconos.
+- **Cajón de apps a pantalla completa:** se abre con el ícono de cuadritos, con *Todas las apps* o deslizando hacia arriba sobre los íconos. Orden A–Z, buscador, barra de letras, apps ocultas; se cierra deslizando hacia abajo.
+- **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
+- Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
+
 ### Funciones de Launcher 27 (APK)
 - **Inicio:** reloj gigante (tócalo para abrir alarmas), modelo, Android y HyperOS, procesador, RAM y almacenamiento reales, y batería con nivel, temperatura y tiempo restante. Los puntos de color cambian el tema.
 - **Inicio** también tiene accesos rápidos (linterna, Wi-Fi, datos, Bluetooth, sonido, pantalla) y widgets de clima, próximo evento y lo que suena.
