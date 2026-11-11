@@ -40,10 +40,11 @@ jobs:
           path: out/*.apk
 
       - name: Publicar en Releases
+        if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.3.${{ github.run_number }}
-          name: Launchers v1.3.${{ github.run_number }} (con gestos)
+          tag_name: v1.4.${{ github.run_number }}
+          name: Launchers v1.4.${{ github.run_number }}
           make_latest: true
           files: |
             out/Launcher-CY.apk

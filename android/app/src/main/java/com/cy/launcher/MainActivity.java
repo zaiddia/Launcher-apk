@@ -3,6 +3,26 @@ package com.cy.launcher;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.ActivityOptions;
+import android.content.BroadcastReceiver;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.LauncherApps;
+import android.content.pm.PackageInfo;
+import android.content.pm.ShortcutInfo;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.os.Process;
+import android.util.LruCache;
+import android.view.HapticFeedbackConstants;
+import androidx.core.content.FileProvider;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import android.content.ActivityNotFoundException;
 import android.accessibilityservice.AccessibilityService;
 import android.content.ClipData;
@@ -79,6 +99,16 @@ public class MainActivity extends Activity {
     private GeolocationPermissions.Callback geoCallback;
     private String geoOrigin;
     private final Map<String, String> iconCache = new HashMap<>();
+    private final ExecutorService bg = Executors.newFixedThreadPool(2);
+    private volatile String appsJson = null;
+    private final LruCache<String, byte[]> iconBytes = new LruCache<String, byte[]>(10 * 1024 * 1024) {
+        @Override
+        protected int sizeOf(String k, byte[] v) { return v.length; }
+    };
+    private final Map<String, ShortcutInfo> shortcutCache = new HashMap<>();
+    private BroadcastReceiver pkgReceiver;
+    private volatile boolean torchOn = false;
+    private String torchId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,10 +132,37 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(true);
         s.setTextZoom(100);
+        s.setOffscreenPreRaster(true);
+        web.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true);
 
+        // Íconos servidos como imágenes normales: se generan en segundo plano y el navegador los cachea.
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/icon/", path -> pngResponse(appIconPng(path.replace(".png", ""))))
+                .addPathHandler("/sicon/", path -> pngResponse(shortcutIconPng(path.replace(".png", ""))))
                 .build();
+
+        bg.execute(() -> appsJson = buildAppsJson());
+        pkgReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context c, Intent i) {
+                Uri d = i.getData();
+                if (d != null) iconBytes.remove(d.getSchemeSpecificPart());
+                bg.execute(() -> {
+                    appsJson = buildAppsJson();
+                    js("window.onAppsChanged&&window.onAppsChanged()");
+                });
+            }
+        };
+        IntentFilter pf = new IntentFilter();
+        pf.addAction(Intent.ACTION_PACKAGE_ADDED);
+        pf.addAction(Intent.ACTION_PACKAGE_REMOVED);
+        pf.addAction(Intent.ACTION_PACKAGE_CHANGED);
+        pf.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        pf.addDataScheme("package");
+        registerReceiver(pkgReceiver, pf);
+        initTorch();
 
         web.setWebViewClient(new WebViewClient() {
             @Override
@@ -214,7 +271,107 @@ public class MainActivity extends Activity {
     }
 
     private void js(String code) {
-        if (web != null) web.evaluateJavascript(code, null);
+        if (web != null) web.post(() -> web.evaluateJavascript(code, null));
+    }
+
+    @Override
+    protected void onDestroy() {
+        try { unregisterReceiver(pkgReceiver); } catch (Exception ignored) { }
+        bg.shutdownNow();
+        super.onDestroy();
+    }
+
+    private WebResourceResponse pngResponse(byte[] b) {
+        if (b == null) return new WebResourceResponse("image/png", null, 404, "Not found", new HashMap<>(), new ByteArrayInputStream(new byte[0]));
+        Map<String, String> h = new HashMap<>();
+        h.put("Cache-Control", "max-age=604800");
+        return new WebResourceResponse("image/png", null, 200, "OK", h, new ByteArrayInputStream(b));
+    }
+
+    private byte[] drawablePng(Drawable d, int size) {
+        Bitmap bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(bmp);
+        d.setBounds(0, 0, size, size);
+        d.draw(c);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
+        bmp.recycle();
+        return out.toByteArray();
+    }
+
+    private byte[] appIconPng(String pkg) {
+        byte[] b = iconBytes.get(pkg);
+        if (b != null) return b;
+        try {
+            b = drawablePng(getPackageManager().getApplicationIcon(pkg), 144);
+            iconBytes.put(pkg, b);
+            return b;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private byte[] shortcutIconPng(String key) {
+        byte[] b = iconBytes.get("s:" + key);
+        if (b != null) return b;
+        try {
+            ShortcutInfo si;
+            synchronized (shortcutCache) { si = shortcutCache.get(key); }
+            if (si == null) return null;
+            LauncherApps la = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
+            Drawable d = la.getShortcutIconDrawable(si, getResources().getDisplayMetrics().densityDpi);
+            if (d == null) return null;
+            b = drawablePng(d, 96);
+            iconBytes.put("s:" + key, b);
+            return b;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String buildAppsJson() {
+        JSONArray arr = new JSONArray();
+        try {
+            PackageManager pm = getPackageManager();
+            Intent main = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER);
+            List<ResolveInfo> list = pm.queryIntentActivities(main, 0);
+            List<String[]> items = new ArrayList<>();
+            java.util.HashSet<String> seen = new java.util.HashSet<>();
+            for (ResolveInfo r : list) {
+                String pkg = r.activityInfo.packageName;
+                if (pkg.equals(getPackageName()) || !seen.add(pkg)) continue;
+                items.add(new String[]{String.valueOf(r.loadLabel(pm)), pkg});
+            }
+            Collections.sort(items, (a, b) -> a[0].compareToIgnoreCase(b[0]));
+            for (String[] it : items) {
+                JSONObject o = new JSONObject();
+                o.put("l", it[0]);
+                o.put("p", it[1]);
+                arr.put(o);
+            }
+        } catch (Exception ignored) { }
+        return arr.toString();
+    }
+
+    private void initTorch() {
+        try {
+            CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+            for (String id : cm.getCameraIdList()) {
+                CameraCharacteristics ch = cm.getCameraCharacteristics(id);
+                Boolean f = ch.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
+                Integer face = ch.get(CameraCharacteristics.LENS_FACING);
+                if (f != null && f && face != null && face == CameraCharacteristics.LENS_FACING_BACK) { torchId = id; break; }
+            }
+            cm.registerTorchCallback(new CameraManager.TorchCallback() {
+                @Override
+                public void onTorchModeChanged(String cameraId, boolean enabled) {
+                    if (cameraId.equals(torchId)) {
+                        torchOn = enabled;
+                        js("window.onTorch&&window.onTorch(" + enabled + ")");
+                    }
+                }
+            }, null);
+        } catch (Exception ignored) { }
     }
 
     private void openExternal(String url) {
@@ -293,6 +450,14 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String getApps() {
+            String c = appsJson;
+            if (c != null) return c;
+            appsJson = buildAppsJson();
+            return appsJson;
+        }
+
+        @JavascriptInterface
+        public String getAppsOld() {
             JSONArray arr = new JSONArray();
             try {
                 PackageManager pm = getPackageManager();
@@ -507,6 +672,220 @@ public class MainActivity extends Activity {
             return max; // MHz, -1 si el sistema no lo permite
         }
 
+        /* ---------- Apertura con animación, vibración ---------- */
+        @JavascriptInterface
+        public boolean launchAt(String pkg, float x, float y, float w, float h) {
+            try {
+                Intent i = getPackageManager().getLaunchIntentForPackage(pkg);
+                if (i == null) return false;
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+                float d = getResources().getDisplayMetrics().density;
+                runOnUiThread(() -> {
+                    try {
+                        Bundle o = ActivityOptions.makeScaleUpAnimation(web, Math.round(x * d), Math.round(y * d),
+                                Math.max(1, Math.round(w * d)), Math.max(1, Math.round(h * d))).toBundle();
+                        startActivity(i, o);
+                    } catch (Exception e) {
+                        try { startActivity(i); } catch (Exception ignored) { }
+                    }
+                });
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        @JavascriptInterface
+        public void haptic(String type) {
+            runOnUiThread(() -> {
+                int c = "long".equals(type) ? HapticFeedbackConstants.LONG_PRESS
+                        : "tick".equals(type) ? HapticFeedbackConstants.CLOCK_TICK
+                        : HapticFeedbackConstants.VIRTUAL_KEY;
+                web.performHapticFeedback(c, HapticFeedbackConstants.FLAG_IGNORE_VIEW_SETTING);
+            });
+        }
+
+        /* ---------- Menú de opciones de una app ---------- */
+        @JavascriptInterface
+        public String appDetails(String pkg) {
+            JSONObject o = new JSONObject();
+            try {
+                PackageManager pm = getPackageManager();
+                PackageInfo pi = pm.getPackageInfo(pkg, 0);
+                ApplicationInfo ai = pi.applicationInfo;
+                boolean system = (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
+                boolean updated = (ai.flags & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0;
+                long size = new File(ai.sourceDir).length();
+                boolean split = ai.splitSourceDirs != null && ai.splitSourceDirs.length > 0;
+                if (split) for (String sd : ai.splitSourceDirs) size += new File(sd).length();
+                o.put("label", String.valueOf(pm.getApplicationLabel(ai)));
+                o.put("version", pi.versionName == null ? "" : pi.versionName);
+                o.put("installed", pi.firstInstallTime);
+                o.put("updated", pi.lastUpdateTime);
+                o.put("system", system && !updated);
+                o.put("canUninstall", !system || updated);
+                o.put("split", split);
+                o.put("size", size);
+            } catch (Exception ignored) { }
+            return o.toString();
+        }
+
+        @JavascriptInterface
+        public String shortcuts(String pkg) {
+            JSONArray arr = new JSONArray();
+            try {
+                LauncherApps la = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
+                if (!la.hasShortcutHostPermission()) return arr.toString();
+                LauncherApps.ShortcutQuery q = new LauncherApps.ShortcutQuery();
+                q.setPackage(pkg);
+                q.setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC | LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST);
+                List<ShortcutInfo> list = la.getShortcuts(q, Process.myUserHandle());
+                if (list == null) return arr.toString();
+                List<ShortcutInfo> sorted = new ArrayList<>(list);
+                Collections.sort(sorted, (a, b) -> {
+                    int ma = a.isDeclaredInManifest() ? 0 : 1, mb = b.isDeclaredInManifest() ? 0 : 1;
+                    return ma != mb ? ma - mb : a.getRank() - b.getRank();
+                });
+                int n = 0;
+                for (ShortcutInfo si : sorted) {
+                    if (!si.isEnabled() || n++ >= 5) continue;
+                    CharSequence l = si.getShortLabel();
+                    if (l == null) l = si.getLongLabel();
+                    String key = pkg + "/" + si.getId();
+                    synchronized (shortcutCache) { shortcutCache.put(key, si); }
+                    JSONObject o = new JSONObject();
+                    o.put("id", si.getId());
+                    o.put("l", l == null ? si.getId() : l.toString());
+                    o.put("key", key);
+                    arr.put(o);
+                }
+            } catch (Exception ignored) { }
+            return arr.toString();
+        }
+
+        @JavascriptInterface
+        public void startShortcut(String pkg, String id) {
+            runOnUiThread(() -> {
+                try {
+                    LauncherApps la = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
+                    la.startShortcut(pkg, id, null, null, Process.myUserHandle());
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public void uninstall(String pkg) {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + pkg)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public void appNotifications(String pkg) {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                            .putExtra(Settings.EXTRA_APP_PACKAGE, pkg).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                } catch (Exception e) {
+                    openAppInfo(pkg);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void openStore(String pkg) {
+            openUrl("market://details?id=" + pkg);
+        }
+
+        @JavascriptInterface
+        public void shareLink(String pkg, String label) {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain")
+                        .putExtra(Intent.EXTRA_TEXT, label + ": https://play.google.com/store/apps/details?id=" + pkg);
+                try { startActivity(Intent.createChooser(i, label).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            });
+        }
+
+        /** Copia el APK instalado y abre el menú de compartir (WhatsApp, Bluetooth, Quick Share...). */
+        @JavascriptInterface
+        public void shareApk(String pkg) {
+            bg.execute(() -> {
+                try {
+                    PackageManager pm = getPackageManager();
+                    ApplicationInfo ai = pm.getApplicationInfo(pkg, 0);
+                    String label = String.valueOf(pm.getApplicationLabel(ai)).replaceAll("[^\\p{L}\\p{N} ._-]", "").trim();
+                    if (label.isEmpty()) label = pkg;
+                    File dir = new File(getCacheDir(), "share");
+                    dir.mkdirs();
+                    File[] old = dir.listFiles();
+                    if (old != null) for (File f : old) f.delete();
+                    File out = new File(dir, label + ".apk");
+                    try (InputStream in = new FileInputStream(ai.sourceDir); OutputStream os = new FileOutputStream(out)) {
+                        byte[] buf = new byte[65536];
+                        int r;
+                        while ((r = in.read(buf)) > 0) os.write(buf, 0, r);
+                    }
+                    Uri uri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".files", out);
+                    Intent i = new Intent(Intent.ACTION_SEND).setType("application/vnd.android.package-archive")
+                            .putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    final String lbl = label;
+                    runOnUiThread(() -> {
+                        try { startActivity(Intent.createChooser(i, lbl).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+                    });
+                } catch (Exception e) {
+                    js("window.toast&&toast('Error')");
+                }
+            });
+        }
+
+        /* ---------- Accesos rápidos ---------- */
+        @JavascriptInterface
+        public boolean hasTorch() {
+            return torchId != null;
+        }
+
+        @JavascriptInterface
+        public boolean getTorch() {
+            return torchOn;
+        }
+
+        @JavascriptInterface
+        public void setTorch(boolean on) {
+            try {
+                CameraManager cm = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+                if (torchId != null) cm.setTorchMode(torchId, on);
+            } catch (Exception ignored) { }
+        }
+
+        @JavascriptInterface
+        public void openPanel(String which) {
+            runOnUiThread(() -> {
+                String a;
+                switch (which) {
+                    case "wifi": a = Build.VERSION.SDK_INT >= 29 ? Settings.Panel.ACTION_WIFI : Settings.ACTION_WIFI_SETTINGS; break;
+                    case "internet": a = Build.VERSION.SDK_INT >= 29 ? Settings.Panel.ACTION_INTERNET_CONNECTIVITY : Settings.ACTION_WIRELESS_SETTINGS; break;
+                    case "volume": a = Build.VERSION.SDK_INT >= 29 ? Settings.Panel.ACTION_VOLUME : Settings.ACTION_SOUND_SETTINGS; break;
+                    case "bt": a = Settings.ACTION_BLUETOOTH_SETTINGS; break;
+                    case "display": a = Settings.ACTION_DISPLAY_SETTINGS; break;
+                    case "battery": a = Intent.ACTION_POWER_USAGE_SUMMARY; break;
+                    case "location": a = Settings.ACTION_LOCATION_SOURCE_SETTINGS; break;
+                    default: a = Settings.ACTION_SETTINGS;
+                }
+                try { startActivity(new Intent(a).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); }
+                catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { } }
+            });
+        }
+
+        @JavascriptInterface
+        public void calendarEventsAsync(int days) {
+            bg.execute(() -> {
+                String r = calendarEvents(days);
+                js("window.onCalendarEvents&&window.onCalendarEvents(" + JSONObject.quote(r) + ")");
+            });
+        }
+
         /* ---------- Gestos de navegación ---------- */
         @JavascriptInterface
         public String gestureStatus() {
@@ -527,6 +906,10 @@ public class MainActivity extends Activity {
                 o.put("pill", p.getBoolean("pill", true));
                 o.put("side", p.getString("side", "both"));
                 o.put("sens", p.getFloat("sens", 1f));
+                o.put("mode", p.getString("mode", "cover"));
+                o.put("bar", p.getString("bar", "black"));
+                o.put("order", p.getString("order", "rhb"));
+                o.put("arrow", p.getBoolean("arrow", true));
             } catch (Exception ignored) { }
             return o.toString();
         }
@@ -543,6 +926,10 @@ public class MainActivity extends Activity {
                 if (o.has("pill")) e.putBoolean("pill", o.getBoolean("pill"));
                 if (o.has("side")) e.putString("side", o.getString("side"));
                 if (o.has("sens")) e.putFloat("sens", (float) o.getDouble("sens"));
+                if (o.has("mode")) e.putString("mode", o.getString("mode"));
+                if (o.has("bar")) e.putString("bar", o.getString("bar"));
+                if (o.has("order")) e.putString("order", o.getString("order"));
+                if (o.has("arrow")) e.putBoolean("arrow", o.getBoolean("arrow"));
                 e.apply();
                 GestureService.reload();
             } catch (Exception ignored) { }
@@ -558,7 +945,9 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public boolean setNavHidden(boolean hide) {
             try {
-                return Settings.Global.putInt(getContentResolver(), "force_fsg_nav_bar", hide ? 1 : 0);
+                boolean ok = Settings.Global.putInt(getContentResolver(), "force_fsg_nav_bar", hide ? 1 : 0);
+                GestureService.reload();
+                return ok;
             } catch (Exception e) {
                 return false;
             }
@@ -713,10 +1102,10 @@ public class MainActivity extends Activity {
                 o.put("charging", status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);
                 int temp = b != null ? b.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) : -1;
                 if (temp > 0) o.put("temp", temp / 10.0);
-                if (Build.VERSION.SDK_INT >= 28) {
-                    BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
-                    o.put("chargeLeft", bm.computeChargeTimeRemaining());
-                }
+                BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
+                if (Build.VERSION.SDK_INT >= 28) o.put("chargeLeft", bm.computeChargeTimeRemaining());
+                o.put("current", bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW));
+                o.put("counter", bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER));
             } catch (Exception ignored) {
             }
             return o.toString();
