@@ -33,6 +33,8 @@ HyperOS apaga sus gestos cuando el launcher no es el de Xiaomi, así que los dos
 | Deslizar de lado sobre la barra de abajo | App anterior |
 | Deslizar hacia abajo arriba del launcher | Notificaciones |
 
+**Zona inferior:** en modo **Cubrir** (por defecto) la barra de gestos tapa los 3 botones, así deslizas desde el borde de abajo como en los gestos de Xiaomi; un toque sobre la barra sigue usando el botón que está debajo (elige el orden de tus botones). La flecha de Atrás sigue al dedo y las zonas laterales se apartan cuando aparece el teclado.
+
 **Activarlos:** en el launcher toca **Configurar gestos** (o Ajustes → Gestos) → **Activar gestos** → Apps instaladas → *Gestos de navegación* → activar.
 - Si aparece **"Ajuste restringido"**: Info de la app → ⋮ → **Permitir ajustes restringidos**, y repite.
 - En Info de la app activa **Inicio automático** y **Batería → Sin restricciones**.
@@ -46,7 +48,10 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 
 ### Funciones de Launcher 27 (APK)
 - **Inicio:** reloj gigante (tócalo para abrir alarmas), modelo, Android y HyperOS, procesador, RAM y almacenamiento reales, y batería con nivel, temperatura y tiempo restante. Los puntos de color cambian el tema.
-- **Apps:** 10 favoritas (mantén presionado un ícono para cambiarlo), todas tus apps instaladas y el mapa con tu ubicación.
+- **Inicio** también tiene accesos rápidos (linterna, Wi-Fi, datos, Bluetooth, sonido, pantalla) y widgets de clima, próximo evento y lo que suena.
+- **Apps:** 10 favoritas, cajón con todas tus apps en orden A–Z con buscador y barra de letras, y el mapa con tu ubicación. Las apps abren con animación de zoom.
+- **Mantén presionada una app** para ver: sus accesos directos (p. ej. *Nuevo chat*), Abrir, Agregar a favoritos / Cambiar ícono, Info de la app, Notificaciones, Compartir app (APK), Compartir enlace, Ver en Play Store, Renombrar, Ocultar del cajón y Desinstalar.
+- Desliza con el dedo entre las 4 páginas; la página sigue tu dedo.
 - **Música:** muestra y controla lo que suena en **Spotify, YouTube Music, etc.**, con carátula en el vinilo y **letra sincronizada** (LRCLIB). Necesita "acceso a notificaciones"; la app te lleva a activarlo. También reproduce canciones guardadas en el celular.
 - **Calendario:** eventos de **tu calendario de Google o del celular** (con permiso) y los que agregues en la app, con "faltan X días".
 - **Pregunta algo…:** busca entre tus apps; con Enter busca en Google.
