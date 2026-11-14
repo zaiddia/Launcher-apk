@@ -18,6 +18,15 @@ import androidx.core.content.FileProvider;
 import androidx.browser.customtabs.CustomTabColorSchemeParams;
 import androidx.browser.customtabs.CustomTabsIntent;
 import android.util.Xml;
+import android.speech.RecognitionListener;
+import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import android.speech.tts.Voice;
+import android.provider.ContactsContract;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import org.xmlpull.v1.XmlPullParser;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -125,6 +134,13 @@ public class MainActivity extends Activity {
         @Override public void onSessionDestroyed() { mediaChanged(); }
     };
     private long lastMediaPush = 0;
+    /* JARVIS */
+    private static final int REQ_MIC = 21, REQ_CONTACTS = 22, REQ_CALL = 23, REQ_STT = 24;
+    private SpeechRecognizer stt;
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
+    private String pendingLang = "es-CO";
+    private long lastRms = 0;
     private String torchId = null;
 
     @Override
@@ -230,6 +246,10 @@ public class MainActivity extends Activity {
 
         web.addJavascriptInterface(new Bridge(), "Android");
         web.loadUrl(START_URL);
+        String a0 = getIntent() != null ? getIntent().getAction() : null;
+        if (Intent.ACTION_ASSIST.equals(a0) || "com.cy.launcher.JARVIS".equals(a0) || "android.intent.action.VOICE_COMMAND".equals(a0)) {
+            web.postDelayed(() -> js("window.onAssist&&window.onAssist()"), 1200);
+        }
     }
 
     private boolean hasLocation() {
@@ -240,6 +260,13 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
         super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == REQ_MIC) {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) startListen(pendingLang);
+            else js("window.onJv&&window.onJv('error','perm')");
+        }
+        if (requestCode == REQ_CONTACTS || requestCode == REQ_CALL) {
+            js("window.onJvPerm&&window.onJvPerm(" + (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) + ")");
+        }
         if (requestCode == REQ_CAL) {
             js("window.onCalendarPermission&&window.onCalendarPermission()");
         }
@@ -252,6 +279,15 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_STT) {
+            String txt = "";
+            if (resultCode == RESULT_OK && data != null) {
+                ArrayList<String> r = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                if (r != null && !r.isEmpty()) txt = r.get(0);
+            }
+            js(txt.isEmpty() ? "window.onJv&&window.onJv('error','nomatch')" : "window.onJv&&window.onJv('final'," + JSONObject.quote(txt) + ")");
+            return;
+        }
         if (requestCode != REQ_FILE || fileCallback == null) return;
         Uri[] out = null;
         if (resultCode == RESULT_OK && data != null) {
@@ -276,8 +312,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (Intent.ACTION_MAIN.equals(intent.getAction())) {
+        String a = intent.getAction();
+        if (Intent.ACTION_MAIN.equals(a)) {
             js("window.onAndroidHome&&window.onAndroidHome()");
+        } else if (Intent.ACTION_ASSIST.equals(a) || "android.intent.action.VOICE_COMMAND".equals(a) || "com.cy.launcher.JARVIS".equals(a)) {
+            js("window.onAssist&&window.onAssist()");
         }
     }
 
@@ -339,6 +378,10 @@ public class MainActivity extends Activity {
         } catch (Exception ignored) { }
         for (MediaController c : watched) { try { c.unregisterCallback(mediaCb); } catch (Exception ignored) { } }
         watched.clear();
+    }
+
+    private static double readNum(String path) throws Exception {
+        try (BufferedReader r = new BufferedReader(new java.io.FileReader(path))) { return Double.parseDouble(r.readLine().trim()); }
     }
 
     private static final SimpleDateFormat[] DATE_FMTS = {
@@ -433,8 +476,79 @@ public class MainActivity extends Activity {
         if (web != null) web.post(() -> web.evaluateJavascript(code, null));
     }
 
+    /* ================= JARVIS: voz ================= */
+    private void startListen(String lang) {
+        runOnUiThread(() -> {
+            try {
+                if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                    pendingLang = lang;
+                    requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_MIC);
+                    return;
+                }
+                Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+                i.putExtra(RecognizerIntent.EXTRA_LANGUAGE, lang);
+                i.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+                i.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+                if (!SpeechRecognizer.isRecognitionAvailable(this)) {
+                    startActivityForResult(i, REQ_STT);
+                    return;
+                }
+                if (tts != null) tts.stop();
+                if (stt == null) {
+                    stt = SpeechRecognizer.createSpeechRecognizer(this);
+                    stt.setRecognitionListener(new RecognitionListener() {
+                        @Override public void onReadyForSpeech(Bundle b) { js("window.onJv&&window.onJv('ready','')"); }
+                        @Override public void onBeginningOfSpeech() { js("window.onJv&&window.onJv('begin','')"); }
+                        @Override public void onRmsChanged(float rms) {
+                            long n = System.currentTimeMillis();
+                            if (n - lastRms < 70) return;
+                            lastRms = n;
+                            js("window.onJvLevel&&window.onJvLevel(" + rms + ")");
+                        }
+                        @Override public void onBufferReceived(byte[] b) { }
+                        @Override public void onEndOfSpeech() { js("window.onJv&&window.onJv('end','')"); }
+                        @Override public void onError(int e) { js("window.onJv&&window.onJv('error'," + JSONObject.quote(String.valueOf(e)) + ")"); }
+                        @Override public void onResults(Bundle b) {
+                            ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                            String t = r != null && !r.isEmpty() ? r.get(0) : "";
+                            js(t.isEmpty() ? "window.onJv&&window.onJv('error','7')" : "window.onJv&&window.onJv('final'," + JSONObject.quote(t) + ")");
+                        }
+                        @Override public void onPartialResults(Bundle b) {
+                            ArrayList<String> r = b.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                            if (r != null && !r.isEmpty()) js("window.onJv&&window.onJv('partial'," + JSONObject.quote(r.get(0)) + ")");
+                        }
+                        @Override public void onEvent(int t, Bundle b) { }
+                    });
+                }
+                stt.startListening(i);
+            } catch (Exception e) {
+                js("window.onJv&&window.onJv('error','start')");
+            }
+        });
+    }
+
+    private void initTts(Runnable then) {
+        if (tts != null) { if (ttsReady && then != null) then.run(); return; }
+        tts = new TextToSpeech(this, st -> {
+            ttsReady = st == TextToSpeech.SUCCESS;
+            if (ttsReady) {
+                tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override public void onStart(String id) { js("window.onJv&&window.onJv('speaking','')"); }
+                    @Override public void onDone(String id) { js("window.onJv&&window.onJv('spoken','')"); }
+                    @Override public void onError(String id) { js("window.onJv&&window.onJv('spoken','')"); }
+                });
+                String v = getSharedPreferences("jarvis", MODE_PRIVATE).getString("voice", "");
+                if (!v.isEmpty()) try { for (Voice vo : tts.getVoices()) if (vo.getName().equals(v)) { tts.setVoice(vo); break; } } catch (Exception ignored) { }
+                if (then != null) then.run();
+            }
+        });
+    }
+
     @Override
     protected void onDestroy() {
+        try { if (stt != null) stt.destroy(); } catch (Exception ignored) { }
+        try { if (tts != null) tts.shutdown(); } catch (Exception ignored) { }
         try { unregisterReceiver(pkgReceiver); } catch (Exception ignored) { }
         bg.shutdownNow();
         super.onDestroy();
@@ -999,6 +1113,163 @@ public class MainActivity extends Activity {
             });
         }
 
+        /* ---------- JARVIS ---------- */
+        @JavascriptInterface public boolean jvAvailable() { return true; }
+
+        @JavascriptInterface public void jvListen(String lang) { startListen(lang); }
+
+        @JavascriptInterface public void jvStop() {
+            runOnUiThread(() -> { try { if (stt != null) stt.cancel(); if (tts != null) tts.stop(); } catch (Exception ignored) { } });
+        }
+
+        @JavascriptInterface public void jvSpeak(String text, String lang, float pitch, float rate) {
+            runOnUiThread(() -> initTts(() -> {
+                try {
+                    if (getSharedPreferences("jarvis", MODE_PRIVATE).getString("voice", "").isEmpty()) {
+                        Locale l = Locale.forLanguageTag(lang);
+                        if (tts.isLanguageAvailable(l) >= TextToSpeech.LANG_AVAILABLE) tts.setLanguage(l);
+                    }
+                    tts.setPitch(pitch);
+                    tts.setSpeechRate(rate);
+                    Bundle b = new Bundle();
+                    tts.speak(text, TextToSpeech.QUEUE_FLUSH, b, "jv" + System.currentTimeMillis());
+                } catch (Exception e) { js("window.onJv&&window.onJv('spoken','')"); }
+            }));
+        }
+
+        @JavascriptInterface public String jvVoices(String langPrefix) {
+            JSONArray arr = new JSONArray();
+            try {
+                if (tts == null || !ttsReady) { runOnUiThread(() -> initTts(null)); return "[]"; }
+                for (Voice v : tts.getVoices()) {
+                    if (!v.getLocale().getLanguage().equals(langPrefix)) continue;
+                    if (v.getFeatures() != null && v.getFeatures().contains("notInstalled")) continue;
+                    JSONObject o = new JSONObject();
+                    o.put("n", v.getName());
+                    o.put("l", v.getLocale().toLanguageTag());
+                    o.put("net", v.isNetworkConnectionRequired());
+                    o.put("q", v.getQuality());
+                    arr.put(o);
+                }
+            } catch (Exception ignored) { }
+            return arr.toString();
+        }
+
+        @JavascriptInterface public void jvSetVoice(String name) {
+            getSharedPreferences("jarvis", MODE_PRIVATE).edit().putString("voice", name).apply();
+            runOnUiThread(() -> { try { if (tts != null) for (Voice vo : tts.getVoices()) if (vo.getName().equals(name)) { tts.setVoice(vo); break; } } catch (Exception ignored) { } });
+        }
+
+        @JavascriptInterface public boolean hasContacts() { return checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED; }
+        @JavascriptInterface public void requestContacts() { runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, REQ_CONTACTS)); }
+        @JavascriptInterface public boolean hasCallPerm() { return checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED; }
+        @JavascriptInterface public void requestCallPerm() { runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.CALL_PHONE}, REQ_CALL)); }
+
+        @JavascriptInterface public String findContacts(String q) {
+            JSONArray arr = new JSONArray();
+            if (!hasContacts()) return arr.toString();
+            Uri u = Uri.withAppendedPath(ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI, Uri.encode(q));
+            String[] cols = {ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER};
+            try (Cursor c = getContentResolver().query(u, cols, null, null, null)) {
+                java.util.HashSet<String> seen = new java.util.HashSet<>();
+                while (c != null && c.moveToNext() && arr.length() < 5) {
+                    String n = c.getString(0), num = c.getString(1);
+                    if (num == null || !seen.add(n)) continue;
+                    JSONObject o = new JSONObject();
+                    o.put("n", n);
+                    o.put("num", num);
+                    arr.put(o);
+                }
+            } catch (Exception ignored) { }
+            return arr.toString();
+        }
+
+        @JavascriptInterface public void call(String number) {
+            runOnUiThread(() -> {
+                try {
+                    boolean can = checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED;
+                    startActivity(new Intent(can ? Intent.ACTION_CALL : Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(number))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface public void setAlarm(int h, int m, String label) {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(AlarmClock.ACTION_SET_ALARM).putExtra(AlarmClock.EXTRA_HOUR, h).putExtra(AlarmClock.EXTRA_MINUTES, m)
+                            .putExtra(AlarmClock.EXTRA_MESSAGE, label).putExtra(AlarmClock.EXTRA_SKIP_UI, true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface public void setTimer(int seconds, String label) {
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(AlarmClock.ACTION_SET_TIMER).putExtra(AlarmClock.EXTRA_LENGTH, seconds)
+                            .putExtra(AlarmClock.EXTRA_MESSAGE, label).putExtra(AlarmClock.EXTRA_SKIP_UI, true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+                } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface public void navigate(String q) {
+            runOnUiThread(() -> {
+                try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("google.navigation:q=" + Uri.encode(q))).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); }
+                catch (Exception e) { openExternal("geo:0,0?q=" + Uri.encode(q)); }
+            });
+        }
+
+        /** Petición HTTP en segundo plano (IA, Wikipedia). Respuesta: onHttp(id, status, body) */
+        @JavascriptInterface public void http(String id, String method, String url, String headersJson, String body) {
+            bg.execute(() -> {
+                int code = 0;
+                String out = "";
+                HttpURLConnection c = null;
+                try {
+                    c = (HttpURLConnection) new URL(url).openConnection();
+                    c.setRequestMethod(method);
+                    c.setConnectTimeout(12000);
+                    c.setReadTimeout(45000);
+                    JSONObject h = new JSONObject(headersJson == null || headersJson.isEmpty() ? "{}" : headersJson);
+                    java.util.Iterator<String> it = h.keys();
+                    while (it.hasNext()) { String k = it.next(); c.setRequestProperty(k, h.getString(k)); }
+                    if (body != null && !body.isEmpty()) {
+                        c.setDoOutput(true);
+                        try (OutputStream os = c.getOutputStream()) { os.write(body.getBytes("UTF-8")); }
+                    }
+                    code = c.getResponseCode();
+                    InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
+                    if (in != null) {
+                        StringBuilder sb = new StringBuilder();
+                        try (BufferedReader r = new BufferedReader(new InputStreamReader(in, "UTF-8"))) {
+                            String ln;
+                            while ((ln = r.readLine()) != null) sb.append(ln).append('\n');
+                        }
+                        out = sb.toString();
+                    }
+                } catch (Exception e) {
+                    out = String.valueOf(e.getMessage());
+                } finally {
+                    if (c != null) c.disconnect();
+                }
+                js("window.onHttp&&window.onHttp(" + JSONObject.quote(id) + "," + code + "," + JSONObject.quote(out) + ")");
+            });
+        }
+
+        /** Carga aproximada de CPU (%) a partir de la frecuencia actual de cada núcleo. */
+        @JavascriptInterface public int cpuLoad() {
+            int n = Runtime.getRuntime().availableProcessors();
+            double sum = 0;
+            int ok = 0;
+            for (int i = 0; i < n; i++) {
+                try {
+                    String base = "/sys/devices/system/cpu/cpu" + i + "/cpufreq/";
+                    double cur = readNum(base + "scaling_cur_freq"), mn = readNum(base + "cpuinfo_min_freq"), mx = readNum(base + "cpuinfo_max_freq");
+                    if (mx > mn && cur > 0) { sum += Math.max(0, Math.min(1, (cur - mn) / (mx - mn))); ok++; }
+                } catch (Exception ignored) { }
+            }
+            return ok == 0 ? -1 : (int) Math.round(sum / ok * 100);
+        }
+
         /* ---------- Noticias, artículos, energía ---------- */
         @JavascriptInterface
         public void fetchFeed(String id, String url) {
@@ -1112,6 +1383,7 @@ public class MainActivity extends Activity {
                 o.put("bar", p.getString("bar", "black"));
                 o.put("order", p.getString("order", "rhb"));
                 o.put("arrow", p.getBoolean("arrow", true));
+                o.put("jarvis", p.getBoolean("jarvis", true));
             } catch (Exception ignored) { }
             return o.toString();
         }
@@ -1132,6 +1404,7 @@ public class MainActivity extends Activity {
                 if (o.has("bar")) e.putString("bar", o.getString("bar"));
                 if (o.has("order")) e.putString("order", o.getString("order"));
                 if (o.has("arrow")) e.putBoolean("arrow", o.getBoolean("arrow"));
+                if (o.has("jarvis")) e.putBoolean("jarvis", o.getBoolean("jarvis"));
                 e.apply();
                 GestureService.reload();
             } catch (Exception ignored) { }

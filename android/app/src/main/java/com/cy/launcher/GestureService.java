@@ -313,7 +313,17 @@ public class GestureService extends AccessibilityService {
         root.setOnTouchListener(new View.OnTouchListener() {
             float sx, sy, lx, ly;
             long t0;
-            boolean armed, holdRecents, moved;
+            boolean armed, holdRecents, moved, jarvis;
+            /* mantener presionada la barra (sin mover) -> abrir JARVIS */
+            final Runnable longPress = () -> {
+                if (moved || armed) return;
+                jarvis = true;
+                haptic(root, HapticFeedbackConstants.LONG_PRESS);
+                try {
+                    startActivity(new Intent(GestureService.this, MainActivity.class).setAction("com.cy.launcher.JARVIS")
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+                } catch (Exception ignored) { }
+            };
             final Runnable hold = () -> {
                 if (armed) {
                     holdRecents = true;
@@ -332,12 +342,13 @@ public class GestureService extends AccessibilityService {
                         sx = lx = e.getRawX();
                         sy = ly = e.getRawY();
                         t0 = System.currentTimeMillis();
-                        armed = holdRecents = moved = false;
+                        armed = holdRecents = moved = jarvis = false;
                         pillTo(0, 1.12f);
+                        if (prefs().getBoolean("jarvis", true)) handler.postDelayed(longPress, 520);
                         return true;
                     case MotionEvent.ACTION_MOVE: {
                         float up = sy - e.getRawY();
-                        if (Math.hypot(e.getRawX() - sx, e.getRawY() - sy) > dp(10)) moved = true;
+                        if (Math.hypot(e.getRawX() - sx, e.getRawY() - sy) > dp(10)) { moved = true; handler.removeCallbacks(longPress); }
                         if (pillView != null) pillView.setTranslationY(-Math.min(dp(14), Math.max(0, up) * 0.25f));
                         if (!armed && up > dp(34)) {
                             armed = true;
@@ -353,7 +364,9 @@ public class GestureService extends AccessibilityService {
                     }
                     case MotionEvent.ACTION_UP: {
                         handler.removeCallbacks(hold);
+                        handler.removeCallbacks(longPress);
                         pillTo(0, 1f);
+                        if (jarvis) { jarvis = false; return true; }
                         float dx = e.getRawX() - sx, up = sy - e.getRawY();
                         if (!moved && overBar && System.currentTimeMillis() - t0 < 500) {
                             // toque normal sobre la barra: el botón que está debajo
@@ -375,6 +388,7 @@ public class GestureService extends AccessibilityService {
                     }
                     default:
                         handler.removeCallbacks(hold);
+                        handler.removeCallbacks(longPress);
                         pillTo(0, 1f);
                         armed = holdRecents = false;
                         return true;
