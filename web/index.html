@@ -1081,7 +1081,7 @@ const GX=S.lang==='es'||S.lang==='pt'?{
  copy:'Copiar comando',copied:'Copiado',hide:'Ocultar botones',hideS:'Si no desaparecen, reinicia el celular',
  help:'Cómo se usa',helpTxt:'← → desde un borde: Atrás<br>↑ desde abajo: Inicio<br>↑ y mantener: Apps recientes<br>↔ sobre la barra de abajo: App anterior<br>↓ en la parte de arriba del launcher: Notificaciones',
  card:'Activa los gestos de pantalla completa',cardB:'Configurar gestos',fail:'No se pudo cambiar',
- zone:'Zona inferior',zoneS:'<b>Cubrir</b>: la barra de gestos tapa los 3 botones, así puedes deslizar desde el borde. Un toque sigue usando el botón que está debajo.',cover:'Cubrir',transp:'Transparente',above:'Encima',barC:'Color de la barra',black:'Negra',white:'Blanca',order:'Orden de tus botones',arrow:'Flecha al ir atrás',arrowS:'Burbuja que sigue al dedo',stopped:'⚠️ Los gestos están activados pero Xiaomi los detuvo. Desactívalos y vuelve a activarlos, y revisa Inicio automático y Batería.'
+ zone:'Zona inferior',zoneS:'<b>Cubrir</b>: la barra de gestos tapa los 3 botones, así puedes deslizar desde el borde. Un toque sigue usando el botón que está debajo.',cover:'Cubrir',transp:'Transparente',above:'Encima',barC:'Color de la barra',black:'Negra',white:'Blanca',order:'Orden de tus botones',arrow:'Flecha al ir atrás',arrowS:'Burbuja que sigue al dedo',jv:'Mantener la barra abre JARVIS',jvS:'Mantén presionada la barrita inferior',stopped:'⚠️ Los gestos están activados pero Xiaomi los detuvo. Desactívalos y vuelve a activarlos, y revisa Inicio automático y Batería.'
 }:{
  t:'Navigation gestures',on:'✅ Gestures on',off:'Gestures off',
  onTxt:'You can now navigate with gestures across the whole phone.',
@@ -1096,7 +1096,7 @@ const GX=S.lang==='es'||S.lang==='pt'?{
  copy:'Copy command',copied:'Copied',hide:'Hide buttons',hideS:'If they stay, restart the phone',
  help:'How to use',helpTxt:'← → from an edge: Back<br>↑ from the bottom: Home<br>↑ and hold: Recent apps<br>↔ on the bottom bar: Previous app<br>↓ at the top of the launcher: Notifications',
  card:'Turn on full-screen gestures',cardB:'Set up gestures',fail:'Could not change it',
- zone:'Bottom zone',zoneS:'<b>Cover</b>: the gesture bar covers the 3 buttons so you can swipe from the edge. A tap still triggers the button underneath.',cover:'Cover',transp:'Transparent',above:'Above',barC:'Bar color',black:'Black',white:'White',order:'Your button order',arrow:'Back arrow',arrowS:'Bubble that follows your finger',stopped:'⚠️ Gestures are enabled but Xiaomi stopped them. Turn them off and on again, and check Autostart and Battery.'
+ zone:'Bottom zone',zoneS:'<b>Cover</b>: the gesture bar covers the 3 buttons so you can swipe from the edge. A tap still triggers the button underneath.',cover:'Cover',transp:'Transparent',above:'Above',barC:'Bar color',black:'Black',white:'White',order:'Your button order',arrow:'Back arrow',arrowS:'Bubble that follows your finger',jv:'Long-press bar opens JARVIS',jvS:'Long-press the bottom handle',stopped:'⚠️ Gestures are enabled but Xiaomi stopped them. Turn them off and on again, and check Autostart and Battery.'
 };
 function gStatus(){try{return JSON.parse(Android.gestureStatus())}catch(e){return null}}
 function gestureSheet(){
@@ -1115,7 +1115,7 @@ function gestureSheet(){
   ${g.navHidden?'':`<div class="row"><span>${X.zone}</span>${seg('mode',[['cover',X.cover],['transparent',X.transp],['above',X.above]])}</div><div style="font-size:11.5px;opacity:.65;margin:-4px 0 6px;line-height:1.4">${X.zoneS}</div>
   ${g.mode==='cover'?`<div class="row"><span>${X.barC}</span>${seg('bar',[['black',X.black],['white',X.white]])}</div>`:''}
   ${g.mode!=='above'?`<div class="row"><span>${X.order}</span>${seg('order',[['rhb','▢ ○ ◁'],['bhr','◁ ○ ▢']])}</div>`:''}`}
-  ${sw('quick',X.quick,X.quickS)}${sw('pill',X.pill,X.pillS)}
+  ${sw('quick',X.quick,X.quickS)}${sw('pill',X.pill,X.pillS)}${sw('jarvis',X.jv,X.jvS)}
   <div class="row"><span>${X.sens}</span>${seg('sens',[[0.75,X.lo],[1,X.mid],[1.4,X.hi]])}</div>
   <div style="font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.6;margin:18px 0 6px">${X.hideT}</div>
   ${g.canHide?sw('navHidden',X.hide,X.hideS):`<div style="${box};background:#fff;color:#111">${X.hideNo}<code style="display:block;background:#111;color:#9ef0b0;border-radius:10px;padding:10px;margin:8px 0;font-size:11.5px;word-break:break-all;-webkit-user-select:all;user-select:all">${cmd}</code><button class="btn alt" id="gCp" style="width:100%">${X.copy}</button></div>`}

@@ -52,6 +52,14 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
+### Novedades de Launcher 27 v1.6
+- **Estilo Neo (futurista):** fondo oscuro con brillo de color, rejilla y esquinas tipo HUD, tarjeta de vidrio, degradados en 8 combinaciones modernas (cian/azul, violeta/rosa, menta/cian, ámbar/naranja…), reloj con brillo neón. El estilo **Clásico** del video sigue disponible en Ajustes.
+- **Detalles del video que faltaban:** línea con el ícono de la pestaña bajo la barra, CPU en porcentaje, "• • •" en Info del dispositivo, letras anterior/siguiente en gris, etiqueta vertical y número de pista en el vinilo.
+- **J.A.R.V.I.S.:** asistente de voz. Se abre con el orbe de la barra "Pregunta algo", manteniendo presionada la barrita de gestos o escribiendo en la barra.
+  - Sin internet ni claves entiende: hora y fecha, clima de hoy o mañana, batería, RAM y almacenamiento, "abre [app]", "llama a [contacto]", "envía un mensaje a [contacto] que diga…" (WhatsApp), "alarma a las 6:30", "temporizador de 5 minutos", "recuérdame … mañana a las 3", "¿qué tengo hoy?", noticias, música (pausa, siguiente, pon una canción), volumen, linterna, "llévame a…", buscar en Google, YouTube o Spotify, foto, cálculos, cambiar color o estilo, chistes.
+  - Preguntas abiertas: responde con Wikipedia; con una clave propia de **Gemini** (gratis) o **Claude** responde con IA y conoce tu contexto (hora, clima, batería, agenda). La clave queda solo en el celular.
+  - Elige la voz en Ajustes → J.A.R.V.I.S.
+
 ### Novedades de Launcher 27 v1.5
 - **Animaciones del video:** al cambiar de pestaña todo se desvanece y la nueva pestaña se arma por partes. El reloj sube desde abajo, aparecen los colores, luego la info y la batería se llena barra por barra. El mapa aparece con desenfoque, los íconos saltan en cascada y las franjas se deslizan. El vinilo llega girando, la letra aparece inclinada en amarillo y el álbum en blanco. Las barras de eventos se pintan de izquierda a derecha. Al cambiar de color también se tiñen los íconos, la batería y el aro de la foto.
 - **Noticias estilo Nova:** en Inicio, desliza hacia la derecha y el panel sigue tu dedo. Muestra Google News de Colombia por temas (Para ti, Colombia, Mundo, Economía, Tecnología, Deportes, Entretenimiento, Ciencia, Salud) y BBC Mundo con fotos. Desliza hacia abajo para actualizar y hacia la izquierda (o atrás) para cerrar. Tocar abre la noticia en una pestaña rápida con el color del tema; mantener presionado la comparte.
