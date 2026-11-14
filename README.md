@@ -52,6 +52,12 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
+### Novedades de Launcher 27 v1.5
+- **Animaciones del video:** al cambiar de pestaña todo se desvanece y la nueva pestaña se arma por partes. El reloj sube desde abajo, aparecen los colores, luego la info y la batería se llena barra por barra. El mapa aparece con desenfoque, los íconos saltan en cascada y las franjas se deslizan. El vinilo llega girando, la letra aparece inclinada en amarillo y el álbum en blanco. Las barras de eventos se pintan de izquierda a derecha. Al cambiar de color también se tiñen los íconos, la batería y el aro de la foto.
+- **Noticias estilo Nova:** en Inicio, desliza hacia la derecha y el panel sigue tu dedo. Muestra Google News de Colombia por temas (Para ti, Colombia, Mundo, Economía, Tecnología, Deportes, Entretenimiento, Ciencia, Salud) y BBC Mundo con fotos. Desliza hacia abajo para actualizar y hacia la izquierda (o atrás) para cerrar. Tocar abre la noticia en una pestaña rápida con el color del tema; mantener presionado la comparte.
+- **Ahorro de energía:** con el launcher en segundo plano se pausan JavaScript y las animaciones. La música se actualiza por eventos, sin consultar cada segundo. El reloj se actualiza una vez por minuto, y las animaciones infinitas solo corren cuando se ven. La batería se lee cada 20 s.
+- **Cajón más veloz:** el desplazamiento no espera a JavaScript, las sombras son ligeras y no se dibujan las secciones fuera de la pantalla.
+
 ### Funciones de Launcher 27 (APK)
 - **Inicio:** reloj gigante (tócalo para abrir alarmas), modelo, Android y HyperOS, procesador, RAM y almacenamiento reales, y batería con nivel, temperatura y tiempo restante. Los puntos de color cambian el tema.
 - **Inicio** también tiene accesos rápidos (linterna, Wi-Fi, datos, Bluetooth, sonido, pantalla) y widgets de clima, próximo evento y lo que suena.
