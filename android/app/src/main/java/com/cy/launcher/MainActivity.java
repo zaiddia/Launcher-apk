@@ -15,6 +15,14 @@ import android.os.Process;
 import android.util.LruCache;
 import android.view.HapticFeedbackConstants;
 import androidx.core.content.FileProvider;
+import androidx.browser.customtabs.CustomTabColorSchemeParams;
+import androidx.browser.customtabs.CustomTabsIntent;
+import android.util.Xml;
+import org.xmlpull.v1.XmlPullParser;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -108,6 +116,15 @@ public class MainActivity extends Activity {
     private final Map<String, ShortcutInfo> shortcutCache = new HashMap<>();
     private BroadcastReceiver pkgReceiver;
     private volatile boolean torchOn = false;
+    private volatile boolean keepAlive = false;
+    private MediaSessionManager.OnActiveSessionsChangedListener sessionsListener;
+    private final List<MediaController> watched = new ArrayList<>();
+    private final MediaController.Callback mediaCb = new MediaController.Callback() {
+        @Override public void onPlaybackStateChanged(PlaybackState state) { mediaChanged(); }
+        @Override public void onMetadataChanged(MediaMetadata metadata) { mediaChanged(); }
+        @Override public void onSessionDestroyed() { mediaChanged(); }
+    };
+    private long lastMediaPush = 0;
     private String torchId = null;
 
     @Override
@@ -268,6 +285,148 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         js("window.onAndroidResume&&window.onAndroidResume()");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (web != null) { web.onResume(); web.resumeTimers(); }
+        startMediaWatch();
+    }
+
+    /** Ahorro de energía: con el launcher en segundo plano se detienen JavaScript y animaciones. */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        stopMediaWatch();
+        if (web != null && !keepAlive) { web.onPause(); web.pauseTimers(); }
+    }
+
+    private void mediaChanged() {
+        long now = System.currentTimeMillis();
+        if (now - lastMediaPush < 250) return;
+        lastMediaPush = now;
+        attachControllers(null);
+        js("window.onMediaChanged&&window.onMediaChanged()");
+    }
+
+    private void attachControllers(List<MediaController> list) {
+        try {
+            if (list == null) {
+                MediaSessionManager m = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+                list = m.getActiveSessions(new ComponentName(this, MediaListener.class));
+            }
+            for (MediaController c : watched) { try { c.unregisterCallback(mediaCb); } catch (Exception ignored) { } }
+            watched.clear();
+            if (list != null) for (MediaController c : list) { c.registerCallback(mediaCb); watched.add(c); }
+        } catch (Exception ignored) { }
+    }
+
+    private void startMediaWatch() {
+        try {
+            MediaSessionManager m = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+            ComponentName cn = new ComponentName(this, MediaListener.class);
+            if (sessionsListener == null) sessionsListener = controllers -> { attachControllers(controllers); js("window.onMediaChanged&&window.onMediaChanged()"); };
+            m.addOnActiveSessionsChangedListener(sessionsListener, cn);
+            attachControllers(m.getActiveSessions(cn));
+        } catch (Exception ignored) { /* sin acceso a notificaciones */ }
+    }
+
+    private void stopMediaWatch() {
+        try {
+            MediaSessionManager m = (MediaSessionManager) getSystemService(Context.MEDIA_SESSION_SERVICE);
+            if (sessionsListener != null) m.removeOnActiveSessionsChangedListener(sessionsListener);
+        } catch (Exception ignored) { }
+        for (MediaController c : watched) { try { c.unregisterCallback(mediaCb); } catch (Exception ignored) { } }
+        watched.clear();
+    }
+
+    private static final SimpleDateFormat[] DATE_FMTS = {
+            new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss Z", Locale.US),
+            new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz", Locale.US),
+            new SimpleDateFormat("dd MMM yyyy HH:mm:ss Z", Locale.US),
+            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US)};
+
+    private static long parseDate(String d) {
+        if (d == null) return 0;
+        d = d.trim();
+        for (SimpleDateFormat f : DATE_FMTS) {
+            try { synchronized (f) { return f.parse(d).getTime(); } } catch (Exception ignored) { }
+        }
+        return 0;
+    }
+
+    /** Descarga y lee un feed RSS/Atom; devuelve [{t,l,d,s,su,img}] */
+    private String readFeed(String url) throws Exception {
+        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
+        c.setConnectTimeout(9000);
+        c.setReadTimeout(12000);
+        c.setInstanceFollowRedirects(true);
+        c.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14) LauncherCY/1.5");
+        JSONArray arr = new JSONArray();
+        try (InputStream in = c.getInputStream()) {
+            XmlPullParser x = Xml.newPullParser();
+            x.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
+            x.setInput(in, null);
+            JSONObject it = null;
+            String channelTitle = "";
+            int ev = x.getEventType();
+            while (ev != XmlPullParser.END_DOCUMENT && arr.length() < 60) {
+                if (ev == XmlPullParser.START_TAG) {
+                    String n = x.getName();
+                    if ("item".equals(n) || "entry".equals(n)) {
+                        it = new JSONObject();
+                    } else if (it == null) {
+                        if ("title".equals(n) && channelTitle.isEmpty()) channelTitle = x.nextText().trim();
+                    } else {
+                        switch (n) {
+                            case "title": it.put("t", x.nextText().trim()); break;
+                            case "link": {
+                                String href = x.getAttributeValue(null, "href");
+                                if (href != null) it.put("l", href); else it.put("l", x.nextText().trim());
+                                break;
+                            }
+                            case "pubDate": case "published": case "updated": case "dc:date":
+                                if (!it.has("d")) it.put("d", parseDate(x.nextText())); break;
+                            case "source": {
+                                String su = x.getAttributeValue(null, "url");
+                                if (su != null) it.put("su", su);
+                                it.put("s", x.nextText().trim());
+                                break;
+                            }
+                            case "media:thumbnail": case "media:content": {
+                                String u = x.getAttributeValue(null, "url");
+                                String w = x.getAttributeValue(null, "width");
+                                if (u != null && (!it.has("img") || (w != null && Integer.parseInt(w.replaceAll("\\D", "0")) >= 400))) it.put("img", u);
+                                break;
+                            }
+                            case "enclosure": {
+                                String u = x.getAttributeValue(null, "url"), ty = x.getAttributeValue(null, "type");
+                                if (u != null && (ty == null || ty.startsWith("image")) && !it.has("img")) it.put("img", u);
+                                break;
+                            }
+                            case "description": case "content:encoded": {
+                                String html = x.nextText();
+                                if (!it.has("img") && html != null) {
+                                    java.util.regex.Matcher mm = java.util.regex.Pattern.compile("<img[^>]+src=[\"']([^\"']+)").matcher(html);
+                                    if (mm.find()) it.put("img", mm.group(1));
+                                }
+                                break;
+                            }
+                            default: break;
+                        }
+                    }
+                } else if (ev == XmlPullParser.END_TAG && it != null && ("item".equals(x.getName()) || "entry".equals(x.getName()))) {
+                    if (!it.has("s")) it.put("s", channelTitle);
+                    if (it.has("t") && it.has("l")) arr.put(it);
+                    it = null;
+                }
+                ev = x.next();
+            }
+        } finally {
+            c.disconnect();
+        }
+        return arr.toString();
     }
 
     private void js(String code) {
@@ -838,6 +997,49 @@ public class MainActivity extends Activity {
                     js("window.toast&&toast('Error')");
                 }
             });
+        }
+
+        /* ---------- Noticias, artículos, energía ---------- */
+        @JavascriptInterface
+        public void fetchFeed(String id, String url) {
+            bg.execute(() -> {
+                String r = "[]";
+                try { r = readFeed(url); } catch (Exception ignored) { }
+                js("window.onFeed&&window.onFeed(" + JSONObject.quote(id) + "," + JSONObject.quote(r) + ")");
+            });
+        }
+
+        @JavascriptInterface
+        public void openArticle(String url, String color) {
+            runOnUiThread(() -> {
+                try {
+                    int c = Color.parseColor(color);
+                    CustomTabsIntent ct = new CustomTabsIntent.Builder()
+                            .setDefaultColorSchemeParams(new CustomTabColorSchemeParams.Builder().setToolbarColor(c).build())
+                            .setShowTitle(true)
+                            .setStartAnimations(MainActivity.this, android.R.anim.fade_in, android.R.anim.fade_out)
+                            .setExitAnimations(MainActivity.this, android.R.anim.fade_in, android.R.anim.fade_out)
+                            .build();
+                    ct.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    ct.launchUrl(MainActivity.this, Uri.parse(url));
+                } catch (Exception e) {
+                    openExternal(url);
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void shareText(String text) {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
+                try { startActivity(Intent.createChooser(i, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            });
+        }
+
+        /** Mientras suena música local, el launcher no se pausa en segundo plano. */
+        @JavascriptInterface
+        public void setKeepAlive(boolean on) {
+            keepAlive = on;
         }
 
         /* ---------- Accesos rápidos ---------- */
