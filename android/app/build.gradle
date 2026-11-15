@@ -54,6 +54,11 @@ android {
             applicationId 'com.cy.aura'
             resValue 'string', 'app_name', 'Aura'
         }
+        jarvis {
+            dimension 'theme'
+            applicationId 'com.cy.jarvis'
+            resValue 'string', 'app_name', 'J.A.R.V.I.S.'
+        }
     }
 
     // La interfaz de cada tema se toma de su carpeta del repositorio.
@@ -61,6 +66,7 @@ android {
         kustom { assets.srcDirs = ['../../web'] }
         ios27 { assets.srcDirs = ['../../web27'] }
         aura { assets.srcDirs = ['../../webaura'] }
+        jarvis { assets.srcDirs = ['../../webaura'] }
     }
 
     buildFeatures {

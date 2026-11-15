@@ -53,6 +53,10 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
+### Nuevo: tema de HyperOS + J.A.R.V.I.S. independiente
+- **`Aura-Hacker.mtz`**: tema de HyperOS con pantalla de bloqueo HUD animada, íconos y fondos. Guía: [theme/INSTALAR.md](theme/INSTALAR.md).
+- **`JARVIS.apk`**: J.A.R.V.I.S. como app de asistente, para usarlo con el launcher original de HyperOS.
+
 ### Aura v2.0 — ahorro de batería (sin perder funciones)
 - **Reposo inteligente**: a los 7 s sin tocar la pantalla se pausan las animaciones decorativas y la pantalla baja a 60 Hz; todo vuelve al tocar. En reposo el procesador pasa de ~130 ms/s a 0–5 ms/s.
 - Lo que queda tapado (cajón, J.A.R.V.I.S., noticias, páginas fuera de vista) deja de animarse.

@@ -357,3 +357,7 @@ body.drawerOpen #parts *,body.drawerOpen #floor *::before,body.jvOpen #parts *,b
 #jv:not(.on) *,#jv:not(.on) *::before,#jv:not(.on) *::after,#feed:not(.in) .ptr *{animation-play-state:paused!important}
 body.eco #parts,body.eco #floor,body.eco .lightfx,body.eco .wclock .scan{display:none}
 body.eco .glass,body.eco .holo,body.eco #dock{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(140deg,rgba(60,50,110,.6),rgba(25,20,55,.55))}
+
+/* app J.A.R.V.I.S. independiente */
+body.jvapp #home,body.jvapp #hudBot,body.jvapp #floor,body.jvapp #parts,body.jvapp #dockpad,body.jvapp #boot,body.jvapp #wall,body.jvapp #shade,body.jvapp #editbar,body.jvapp #drawer{display:none!important}
+body.jvapp{background:#02060a}

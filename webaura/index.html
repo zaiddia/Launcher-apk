@@ -759,6 +759,10 @@ body.drawerOpen #parts *,body.drawerOpen #floor *::before,body.jvOpen #parts *,b
 body.eco #parts,body.eco #floor,body.eco .lightfx,body.eco .wclock .scan{display:none}
 body.eco .glass,body.eco .holo,body.eco #dock{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(140deg,rgba(60,50,110,.6),rgba(25,20,55,.55))}
 
+/* app J.A.R.V.I.S. independiente */
+body.jvapp #home,body.jvapp #hudBot,body.jvapp #floor,body.jvapp #parts,body.jvapp #dockpad,body.jvapp #boot,body.jvapp #wall,body.jvapp #shade,body.jvapp #editbar,body.jvapp #drawer{display:none!important}
+body.jvapp{background:#02060a}
+
 /* noticias (adaptado) */
 /* ===== panel de noticias ===== */
 #feed{position:fixed;inset:0;z-index:35;background:var(--bg);transform:translateX(-102%);transition:transform .42s cubic-bezier(.2,.9,.25,1);display:flex;flex-direction:column;will-change:transform;box-shadow:12px 0 40px rgba(0,0,0,.25)}
@@ -893,6 +897,7 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
 const has=m=>{try{return NATIVE&&typeof Android[m]==='function'}catch(e){return false}};
+const JVAPP=(()=>{try{return NATIVE&&typeof Android.appMode==='function'&&Android.appMode()==='jarvis'}catch(e){return false}})();
 const hap=t=>{try{if(has('haptic'))Android.haptic(t||'tap');else if(navigator.vibrate)navigator.vibrate(t==='long'?18:6)}catch(e){}};
 const I={
 home:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" fill="currentColor" stroke="none"/>',
@@ -2100,13 +2105,23 @@ window.onAndroidHome=()=>{if(HUDON()&&!document.body.classList.contains('drawerO
 window.onAndroidResume=()=>{ecoWake();ecoCheck();sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
 window.addEventListener('resize',()=>layoutPages(S.page|0));
 if(!S.pages||!S.dock)defaultLayout();cleanLayout();
-applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();ecoWake();setTimeout(ecoCheck,1500);(window.requestIdleCallback||setTimeout)(()=>{try{renderDrawer()}catch(e){}},{timeout:1500});if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
+applyTheme();applyWall();renderHome(true);schedTick();hudBottom();if(!JVAPP){hudBoot();hudFirstRun()}hudTick();sampleComm();ecoWake();setTimeout(ecoCheck,1500);(window.requestIdleCallback||setTimeout)(()=>{try{renderDrawer()}catch(e){}},{timeout:1500});if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
 if(NATIVE){nativeDev();setInterval(()=>{if(!document.hidden&&(S.page|0)===1){nativeDev();refreshWidgets()}},30000)}
 pollMedia();refreshNEV(true);if(S.wxLoc)loadWx(false);else setTimeout(()=>geoLocate(true),1500);
-if(NATIVE&&has('gestureStatus')&&!S.gAsked){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}
-if(NATIVE&&!S.homeAsked){S.homeAsked=true;save();try{if(!Android.isDefaultLauncher())setTimeout(()=>{const t=T();sheet(`<h3>Aura</h3><p style="font-size:14px;margin-bottom:14px;text-align:center">${esc(t.homeHint)}</p><div style="display:flex;gap:10px"><button class="btn alt" data-x style="flex:1">${esc(t.cancel)}</button><button class="btn" id="hm2" style="flex:1">OK</button></div>`);$('#hm2').onclick=()=>{closeSheet();Android.setDefaultLauncher()}},1500)}catch(e){}}
-else if(NATIVE&&!S.gAsked){S.gAsked=true;save();try{const g=gStatus();if(g&&!g.service)setTimeout(gestureSheet,1500)}catch(e){}}
+if(NATIVE&&has('gestureStatus')&&!S.gAsked&&!JVAPP){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}
+if(NATIVE&&!S.homeAsked&&!JVAPP){S.homeAsked=true;save();try{if(!Android.isDefaultLauncher())setTimeout(()=>{const t=T();sheet(`<h3>Aura</h3><p style="font-size:14px;margin-bottom:14px;text-align:center">${esc(t.homeHint)}</p><div style="display:flex;gap:10px"><button class="btn alt" data-x style="flex:1">${esc(t.cancel)}</button><button class="btn" id="hm2" style="flex:1">OK</button></div>`);$('#hm2').onclick=()=>{closeSheet();Android.setDefaultLauncher()}},1500)}catch(e){}}
+else if(NATIVE&&!S.gAsked&&!JVAPP){S.gAsked=true;save();try{const g=gStatus();if(g&&!g.service)setTimeout(gestureSheet,1500)}catch(e){}}
 $('#eAdd').innerHTML=ic('plus');$('#eSet').innerHTML=ic('sliders');$('#srchT').textContent=T().search;$('#eCancel').textContent=T().cancel;$('#eDone').textContent=T().done;
+
+/* ---------- J.A.R.V.I.S. como app independiente ---------- */
+if(JVAPP){document.body.classList.add('jvapp');ECO.idle=false;
+  const _jc=jvClose;
+  jvClose=function(){_jc();Android.finishApp()};
+  window.onAndroidBack=()=>{if(document.body.classList.contains('sheetOpen'))closeSheet();else jvClose()};
+  window.onAndroidHome=()=>{};
+  window.onAndroidResume=()=>{if(!JV.on)jvOpen(true)};
+  window.onAssist=()=>jvOpen(true);
+  setTimeout(()=>{if(!JV.on)jvOpen(true)},250)}
 </script>
 </body>
 </html>

@@ -25,7 +25,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleKustomRelease assembleIos27Release assembleAuraRelease --no-daemon --stacktrace
+          ./gradlew assembleKustomRelease assembleIos27Release assembleAuraRelease assembleJarvisRelease --no-daemon --stacktrace
 
       - name: Renombrar APK
         run: |
@@ -33,6 +33,8 @@ jobs:
           cp android/app/build/outputs/apk/kustom/release/app-kustom-release.apk out/Launcher-CY.apk
           cp android/app/build/outputs/apk/ios27/release/app-ios27-release.apk out/Launcher-27.apk
           cp android/app/build/outputs/apk/aura/release/app-aura-release.apk out/Aura.apk
+          cp android/app/build/outputs/apk/jarvis/release/app-jarvis-release.apk out/JARVIS.apk
+          if [ -f theme/out/Aura-Hacker.mtz ]; then cp theme/out/Aura-Hacker.mtz out/; fi
           ls -la out
 
       - uses: actions/upload-artifact@v4
@@ -51,7 +53,11 @@ jobs:
             out/Launcher-CY.apk
             out/Launcher-27.apk
             out/Aura.apk
+            out/JARVIS.apk
+            out/*.mtz
           body: |
+            - **JARVIS.apk**: J.A.R.V.I.S. como app independiente (asistente de voz) para usar con el launcher de HyperOS.
+            - **Aura-Hacker.mtz**: tema de HyperOS (pantalla de bloqueo HUD, íconos, fondos). Guía en theme/INSTALAR.md.
             - **Aura.apk**: estilo HyperOS 3 con fondos vibrantes, widgets de vidrio, brillo, inclinación y carpetas líquidas.
             - **Launcher-27.apk**: tema estilo iOS 27 (reloj gigante, mapa, música con letras, calendario).
             - **Launcher-CY.apk**: tema estilo KLWP (cabecera negra con esquina doblada).

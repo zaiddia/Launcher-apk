@@ -1563,6 +1563,13 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> requestPermissions(miss.toArray(new String[0]), REQ_ALL));
         }
 
+        /* ---------- modo app independiente (J.A.R.V.I.S.) ---------- */
+        @JavascriptInterface
+        public String appMode() { return getPackageName().endsWith(".jarvis") ? "jarvis" : "launcher"; }
+
+        @JavascriptInterface
+        public void finishApp() { runOnUiThread(() -> { try { moveTaskToBack(true); } catch (Exception e) { finish(); } }); }
+
         /* ---------- ahorro de energía ---------- */
         @JavascriptInterface
         public boolean powerSave() {
