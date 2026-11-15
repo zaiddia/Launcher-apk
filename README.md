@@ -56,7 +56,7 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 ### Aura v1.9 — optimización de velocidad
 - Se eliminó la causa de los tirones: una animación que recalculaba toda la pantalla en cada cuadro. En reposo pasa de ~15 a 60 fps.
 - Cambio de sección (ACCESS / LOGIN / SETTINGS) en ~0,45 s en vez de ~1,5 s; arranque más corto.
-- El cajón se prepara en segundo plano y abre al instante; la inclinación ya no recalcula la pantalla; sin desenfoques animados.
+- Cajón: ahora se desliza aunque empieces sobre un ícono (antes se bloqueaba), desplazamiento sin esperas y sin efectos pesados por ícono; se prepara en segundo plano y abre al instante; la inclinación ya no recalcula la pantalla; sin desenfoques animados.
 
 ### Aura v1.9: Hacker HUD de una sola pantalla
 - Funciona como el tema original: la **base es fija** (ACCESS / LOGIN, tarjeta del día, reloj hora·min·seg de colores y SYSTEM INFORMATION) y el **panel central cambia** con animación de carga + terminal.

@@ -333,3 +333,14 @@ body.hud .page.in .grid .ai{animation-duration:.3s;animation-delay:calc(60ms + v
 body.drawerOpen .dg:nth-of-type(n+5) .ai{animation:none}
 .jvbg{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
 #boot{transition:opacity .28s,transform .28s}
+
+/* cajón: desplazamiento ligero (sin desenfoques, mezclas ni sombras difusas por ícono) */
+.dbody{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#dlist .ai .ic2 .gl,#dlist .ai .ic2::before{display:none!important}
+#dlist .ai .ic2::after{mix-blend-mode:normal!important;opacity:.18!important}
+#dlist .ai .ic2{transform:none!important}
+#dlist .ai small{text-shadow:0 1px 2px rgba(0,0,0,.9)!important}
+body.hud #dlist .ai .ic2{clip-path:none!important;border-radius:8px!important;box-shadow:inset 0 0 0 1.5px #6E98FF!important;background:linear-gradient(180deg,rgba(60,100,230,.4),rgba(20,40,120,.5))!important}
+body.hud #dlist .ai .ic2::after{opacity:1!important}
+body.hud #dlist .ai .ic2 img{box-shadow:none!important}
+#dlist .ai .ic2 img{box-shadow:none}
