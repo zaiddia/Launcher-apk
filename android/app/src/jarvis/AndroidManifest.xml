@@ -33,5 +33,6 @@
             </intent-filter>
         </activity>
         <service android:name=".GestureService" tools:node="remove" />
+        <activity-alias android:name=".JarvisAlias" tools:node="remove" />
     </application>
 </manifest>

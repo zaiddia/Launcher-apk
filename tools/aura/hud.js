@@ -143,7 +143,7 @@ function hudBottom(){const el=$('#hudBot');if(!el)return;if(!HUDON()){el.innerHT
       <div class="vctl"><button data-v="-1">−</button><button class="pp" data-m="toggle" id="hPP">${NP&&NP.playing?'❚❚':'▶'}</button><button data-v="1">+</button></div><small class="hl">${h.player}: <em id="hPl">${esc(NP?(NP.pkg||'').split('.').pop():'—')}</em></small></div>`;
   else card=`<div class="hf hp hcard dayc" data-f="tab"><span class="ics"><i>✚</i><i>♥</i><i>✱</i></span><b class="dn" id="hDay">${esc(fmt(new Date(),{weekday:'long'}).toUpperCase())}</b>
       <div class="cm1"><button class="ph" data-w="calls">✆</button><div class="nb"><small>${h.notif} <em id="hNn">—</em></small><span class="segs" id="hNs">${'<i></i>'.repeat(10)}</span><small>${h.missed} <em id="hMc">—</em></small></div></div>
-      <div class="cbt"><button data-w="sms">${h.sms} <em id="hSm"></em></button><button data-w="net" id="hNet">${h.net}</button></div>
+      <div class="cbt"><button data-w="sms">${h.sms} <em id="hSm"></em></button><button data-w="net" id="hNet">${h.net}</button></div><button class="jvb2" data-w="ava">J.A.R.V.I.S.</button>
       <button class="ava" data-w="ava"><i></i><i></i><em>☠</em></button></div>`;
   el.innerHTML=`<div class="hb1"><div class="btns"><button class="pb${on1?' act':''}" data-w="acc"><small>${h.media}</small><b>${on1?h.online:h.access}</b><u></u></button><button class="pb${on2?' act':''}" data-w="log"><small>${h.classI}</small><b>${on2?h.online:h.login}</b><u></u></button></div>${card}</div>
     <div class="hb2"><div class="lcol"><button class="pill" data-w="notif" id="hPill"></button><button class="sq${k==='set'?' act':''}" data-w="set" aria-label="settings"></button></div>
@@ -163,7 +163,7 @@ function hudPanels(v){return v.k==='main'?hMain():v.k==='class'?hClass():v.k==='
 function hudUpdate(){if(!HUDON())return;const h=H(),v=DI.bat;
   const wk=JSON.stringify([S.wx,S.wxLoc&&S.wxLoc.name,S.unit]),mr=$('#hMapRow');if(mr&&mr._wk!==wk){mr._wk=wk;mr.innerHTML=hMap();frames(mr)}
   const caps=$('#hCaps');if(caps){const n=v==null?0:Math.round(v/100*9);caps.querySelectorAll('i').forEach((c,i)=>c.classList.toggle('on',i<n));caps.classList.toggle('chg',!!DI.chg);$('#hPct').textContent=(v??'—')+'%';
-    $('#hBt').textContent=(v??'—')+'%'+(DI.temp!=null?'  '+Math.round(DI.temp)+'°C':'');$('#hDis').textContent=DI.chg?'CHARGING':'DISCHARGED'}
+    $('#hBt').textContent=(v??'—')+'%'+(DI.temp!=null?'  '+Math.round(DI.temp)+'°C':'');$('#hDis').textContent=S.lang==='en'?(DI.chg?'CHARGING':'DISCHARGING'):(DI.chg?'CARGANDO':'EN USO')}
   const b2=$('#hBat2');if(b2)b2.textContent=(v??'—')+'% ▮';
   const dt=$('#hDat');if(dt){const nw=hDataRows();if(dt._h!==nw){dt._h=nw;dt.innerHTML=nw}}
   const c2=$('#hCpu2');if(c2)c2.textContent=HD.cpu!=null&&HD.cpu>=0?HD.cpu+'%':'—';
@@ -210,30 +210,30 @@ const PT={es:{t:'Permisos y sistema',s:'Todo se concede con los diálogos y ajus
   all:'Configurar todo automáticamente',run:'Permisos de Android',sp:'Ajustes especiales',xi:'Optimización de HyperOS',keep:'Mantener activo',keepS:'Servicio persistente con notificación mínima: HyperOS no cierra el launcher y abre al instante',
   adb:'Activación total por ADB (opcional)',adbS:'Conecta el celular al PC con depuración USB y ejecuta una vez este comando. Después Aura activa sola las notificaciones y los gestos:',copy:'Copiar',copied:'Copiado',
   step:(i,n)=>`Paso ${i} de ${n}`,done:'Listo: todo configurado',open:'Abrir',ok:'Conceder',
-  pNotif:'Notificaciones',pNotifS:'Para el aviso de «Mantener activo»',pBat:'Sin optimización de batería',pBatS:'Android no pausa el launcher',
+  pNotif:'Notificaciones',pNotifS:'Para el aviso de «Mantener activo»',pAs:'J.A.R.V.I.S. como asistente',pAsS:'Elige «Aura» en Asistente digital: se abre con el gesto o botón de asistente',pBat:'Sin optimización de batería',pBatS:'Android no pausa el launcher',
   pAuto:'Inicio automático',pAutoS:'Que HyperOS no cierre Aura',pMb:'Ahorro de batería: Sin restricciones',pMbS:'Busca Aura y elige «Sin restricciones»',pPop:'Ventanas en segundo plano y bloqueo',pPopS:'Abrir apps y J.A.R.V.I.S. desde segundo plano'},
  en:{t:'Permissions & system',s:'Everything is granted through Android dialogs and settings. «Set up everything» walks through them and continues when you return.',
   all:'Set up everything automatically',run:'Android permissions',sp:'Special settings',xi:'HyperOS optimization',keep:'Keep alive',keepS:'Persistent service with a minimal notification: HyperOS will not close the launcher',
   adb:'Full activation via ADB (optional)',adbS:'Connect the phone to a PC with USB debugging and run this once. Then Aura enables notifications and gestures by itself:',copy:'Copy',copied:'Copied',
   step:(i,n)=>`Step ${i} of ${n}`,done:'Done: everything is set up',open:'Open',ok:'Grant',
-  pNotif:'Notifications',pNotifS:'For the «Keep alive» notice',pBat:'No battery optimization',pBatS:'Android will not pause the launcher',
+  pNotif:'Notifications',pNotifS:'For the «Keep alive» notice',pAs:'J.A.R.V.I.S. as assistant',pAsS:'Choose «Aura» as digital assistant: opens with the assistant gesture or button',pBat:'No battery optimization',pBatS:'Android will not pause the launcher',
   pAuto:'Autostart',pAutoS:'So HyperOS does not close Aura',pMb:'Battery saver: No restrictions',pMbS:'Find Aura and choose «No restrictions»',pPop:'Background windows & lock screen',pPopS:'Open apps and J.A.R.V.I.S. from background'}};
 const PTT=()=>PT[S.lang]||(S.lang==='pt'?PT.es:PT.en);
 function permState(){let st={};try{st=has('permStatus')?JSON.parse(Android.permStatus()):{}}catch(e){}S.permVisited=S.permVisited||{};return st}
 function permLists(){const h=H(),p=PTT();
   const R=[['location',h.pLoc,h.pLocS],['calendar',h.pCal,h.pCalS],['mic',h.pMic,h.pMicS],['contacts',h.pCon,h.pConS],['phone',h.pPh,h.pPhS],['calllog',h.pLog,h.pLogS],['sms',h.pSms,h.pSmsS],['notifications',p.pNotif,p.pNotifS]];
-  const SP=[['home',h.pHome,h.pHomeS],['notif',h.pNot,h.pNotS],['gestures',h.pGes,h.pGesS],['battery',p.pBat,p.pBatS]];
+  const SP=[['home',h.pHome,h.pHomeS],['assistant',p.pAs,p.pAsS],['notif',h.pNot,h.pNotS],['gestures',h.pGes,h.pGesS],['battery',p.pBat,p.pBatS]];
   const XI=[['autostart',p.pAuto,p.pAutoS],['miuibattery',p.pMb,p.pMbS],['popup',p.pPop,p.pPopS]];
   return {R,SP,XI}}
 const PW={q:[],i:0,n:0,wait:false};
 function permDo(k){if(!NATIVE){toast('APK');return}PW.wait=true;
   if(k==='runtime'){const st=permState(),{R}=permLists();Android.requestPerms(R.filter(x=>!st[x[0]]).map(x=>x[0]).join(','))}
   else if(k==='home')Android.setDefaultLauncher();
-  else if(['notif','gestures','battery','autostart','miuibattery','popup'].includes(k)){if(['autostart','miuibattery','popup'].includes(k)){S.permVisited[k]=true;save()}
+  else if(['notif','gestures','battery','assistant','autostart','miuibattery','popup'].includes(k)){if(['autostart','miuibattery','popup','assistant'].includes(k)){S.permVisited[k]=true;save()}
     if(has('requestSpecial'))Android.requestSpecial(k);else if(k==='notif')Android.requestMediaAccess();else if(k==='gestures')Android.openAccessibility()}
   else Android.requestPerms(k)}
 function permPlan(){const st=permState(),{R,SP,XI}=permLists(),q=[];if(R.some(x=>!st[x[0]]))q.push('runtime');
-  SP.forEach(x=>{if(!st[x[0]])q.push(x[0])});if(st.xiaomi)XI.forEach(x=>{if(!S.permVisited[x[0]])q.push(x[0])});return q}
+  SP.forEach(x=>{if(!st[x[0]]&&!(x[0]==='assistant'&&S.permVisited.assistant))q.push(x[0])});if(st.xiaomi)XI.forEach(x=>{if(!S.permVisited[x[0]])q.push(x[0])});return q}
 function permWizard(){if(has('autoGrant'))try{Android.autoGrant()}catch(e){}PW.q=permPlan();PW.n=PW.q.length;PW.i=0;if(!PW.n){toast(PTT().done);permSheet();return}permNext()}
 function permNext(){if(PW.i>=PW.q.length){PW.q=[];toast(PTT().done);permSheet();return}const k=PW.q[PW.i++];toast(PTT().step(PW.i,PW.n));setTimeout(()=>permDo(k),350)}
 function permBack(){if(!PW.wait)return;PW.wait=false;setTimeout(()=>{if(PW.q.length)permNext();else if(document.body.classList.contains('sheetOpen')&&$('#pAll'))permSheet()},450)}
@@ -245,7 +245,7 @@ function permSheet(){const h=H(),p=PTT(),st=permState(),{R,SP,XI}=permLists();
     <button class="btn" id="pAll" style="width:100%;margin-bottom:6px">${esc(p.all)}${nMiss?` · ${nMiss}`:' ✓'}</button>
     <h4>${esc(p.keep)}</h4><div class="grp"><div class="row"><span>${esc(p.keep)}<small>${esc(p.keepS)}</small></span><button class="sw ${st.keepalive?'on':''}" id="pKeep"></button></div></div>
     <h4>${esc(p.run)}</h4><div class="grp">${R.map(r=>row(r,p.ok,st[r[0]])).join('')}</div>
-    <h4>${esc(p.sp)}</h4><div class="grp">${SP.map(r=>row(r,p.open,st[r[0]])).join('')}</div>
+    <h4>${esc(p.sp)}</h4><div class="grp">${SP.map(r=>row(r,p.open,st[r[0]]||(r[0]==='assistant'&&S.permVisited.assistant))).join('')}</div>
     ${st.xiaomi?`<h4>${esc(p.xi)}</h4><div class="grp">${XI.map(r=>row(r,p.open,S.permVisited[r[0]])).join('')}</div>`:''}
     <h4>${esc(p.adb)}</h4><div class="grp" style="padding:10px 14px"><small style="display:block;color:#9AA4B2;font-size:11.5px;margin-bottom:8px">${esc(p.adbS)}</small>
       <code style="display:block;font:500 11px var(--mono);background:rgba(0,0,0,.4);padding:10px;border-radius:8px;word-break:break-all;-webkit-user-select:text;user-select:text">${esc(cmd)}</code>

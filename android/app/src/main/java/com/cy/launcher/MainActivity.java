@@ -105,6 +105,9 @@ import java.util.Map;
 
 public class MainActivity extends Activity {
     static volatile MainActivity act;
+    private static boolean isJarvisAlias(Intent i) {
+        return i != null && i.getComponent() != null && i.getComponent().getClassName().endsWith(".JarvisAlias");
+    }
     private final BroadcastReceiver powerReceiver = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) {
             boolean on = false;
@@ -269,7 +272,7 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new Bridge(), "Android");
         web.loadUrl(START_URL);
         String a0 = getIntent() != null ? getIntent().getAction() : null;
-        if (Intent.ACTION_ASSIST.equals(a0) || "com.cy.launcher.JARVIS".equals(a0) || "android.intent.action.VOICE_COMMAND".equals(a0)) {
+        if (Intent.ACTION_ASSIST.equals(a0) || "com.cy.launcher.JARVIS".equals(a0) || "android.intent.action.VOICE_COMMAND".equals(a0) || isJarvisAlias(getIntent())) {
             web.postDelayed(() -> js("window.onAssist&&window.onAssist()"), 1200);
         }
     }
@@ -339,9 +342,11 @@ public class MainActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         String a = intent.getAction();
-        if (Intent.ACTION_MAIN.equals(a)) {
+        if (isJarvisAlias(intent)) {
+            js("window.onAssist&&window.onAssist()");
+        } else if (Intent.ACTION_MAIN.equals(a)) {
             js("window.onAndroidHome&&window.onAndroidHome()");
-        } else if (Intent.ACTION_ASSIST.equals(a) || "android.intent.action.VOICE_COMMAND".equals(a) || "com.cy.launcher.JARVIS".equals(a)) {
+        } else if (Intent.ACTION_ASSIST.equals(a) || "android.intent.action.VOICE_COMMAND".equals(a) || "com.cy.launcher.JARVIS".equals(a) || isJarvisAlias(intent)) {
             js("window.onAssist&&window.onAssist()");
         }
     }
@@ -1571,6 +1576,9 @@ public class MainActivity extends Activity {
                 PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                 o.put("battery", pm != null && pm.isIgnoringBatteryOptimizations(getPackageName()));
                 o.put("secure", granted("android.permission.WRITE_SECURE_SETTINGS"));
+                String as = Settings.Secure.getString(getContentResolver(), "assistant");
+                String vi = Settings.Secure.getString(getContentResolver(), "voice_interaction_service");
+                o.put("assistant", (as != null && as.startsWith(getPackageName() + "/")) || (vi != null && vi.startsWith(getPackageName() + "/")));
                 o.put("keepalive", KeepAliveService.wanted(MainActivity.this));
                 o.put("keepaliveRunning", KeepAliveService.running);
                 o.put("xiaomi", Build.MANUFACTURER != null && Build.MANUFACTURER.toLowerCase(Locale.ROOT).contains("xiaomi"));
@@ -1600,6 +1608,10 @@ public class MainActivity extends Activity {
                             break;
                         case "gestures":
                             i = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS); break;
+                        case "assistant":   // Asistente digital predeterminado -> J.A.R.V.I.S.
+                            i = new Intent(Settings.ACTION_VOICE_INPUT_SETTINGS);
+                            if (i.resolveActivity(getPackageManager()) == null) i = new Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
+                            break;
                         case "autostart":   // HyperOS / MIUI: inicio automático
                             i = new Intent().setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")); break;
                         case "miuibattery": // HyperOS / MIUI: ahorro de batería -> Sin restricciones

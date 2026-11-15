@@ -361,3 +361,27 @@ body.eco .glass,body.eco .holo,body.eco #dock{-webkit-backdrop-filter:none;backd
 /* app J.A.R.V.I.S. independiente */
 body.jvapp #home,body.jvapp #hudBot,body.jvapp #floor,body.jvapp #parts,body.jvapp #dockpad,body.jvapp #boot,body.jvapp #wall,body.jvapp #shade,body.jvapp #editbar,body.jvapp #drawer{display:none!important}
 body.jvapp{background:#02060a}
+/* ===================== J.A.R.V.I.S. integrado en el HUD ===================== */
+body.hud #jv{color:#EAF6EE}
+body.hud .jvbg{background:radial-gradient(90% 45% at 50% 24%,color-mix(in srgb,var(--tl) 26%,transparent),transparent 70%),repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 3px),rgba(1,4,6,.97)!important}
+body.hud .jvhud{font:700 10px Orbitron,sans-serif;letter-spacing:.26em;padding-bottom:10px;border-bottom:1.5px solid color-mix(in srgb,var(--fr) 70%,transparent);margin:0 12px;padding-left:6px!important;padding-right:6px!important}
+body.hud .jvhud span:first-child{color:var(--fr2)}
+body.hud .jvhud #jvSt{color:var(--fr)}
+body.hud .jvhud button{border-radius:4px;border:1.5px solid var(--fr);color:var(--fr)}
+body.hud .jvorb::before{content:"";position:absolute;inset:-14%;border:1.5px solid color-mix(in srgb,var(--fr) 60%,transparent);clip-path:polygon(0 0,38% 0,38% 3%,0 3%,0 0,100% 0,100% 100%,62% 100%,62% 97%,100% 97%,100% 0);border-radius:0;pointer-events:none}
+body.hud .jvorb i{border-color:color-mix(in srgb,var(--tl) 80%,transparent)}
+body.hud .jvorb .r1{border-color:var(--fr);border-style:dashed}
+body.hud .jvorb .r2{border-color:var(--fr2);border-left-color:transparent;border-right-color:transparent}
+body.hud .jvorb .r3{border-top-color:var(--pk)}
+body.hud .jvorb .core{background:radial-gradient(circle at 40% 35%,#fff 0 8%,color-mix(in srgb,var(--tl) 60%,#fff) 25%,var(--tl) 55%,#062a33 100%);box-shadow:0 0 30px var(--tl),0 0 70px color-mix(in srgb,var(--tl) 50%,transparent)}
+body.hud .jvint{font:600 14px Barlow;color:var(--fr2)}
+body.hud .jb{border-radius:0;font:500 14.5px/1.42 Barlow;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px)}
+body.hud .jb.u{background:linear-gradient(180deg,rgba(90,139,255,.35),rgba(42,79,184,.35));border:0;border-right:4px solid var(--fr2)}
+body.hud .jb.j{background:rgba(0,0,0,.6);border:0;border-left:4px solid var(--fr);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--fr) 35%,transparent)}
+body.hud .jb.j::before{content:"J.A.R.V.I.S. >>";font:700 8.5px Orbitron;color:var(--fr);letter-spacing:.2em}
+body.hud .jvchips button{border-radius:0;border:0;font:700 9px Orbitron;letter-spacing:.1em;text-transform:uppercase;color:#E9F1FF;background:linear-gradient(180deg,#5A8BFF,#2A4FB8);clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);padding:9px 16px}
+body.hud .jvin input{border-radius:0;border:1.5px solid color-mix(in srgb,var(--fr) 70%,transparent);background:rgba(0,0,0,.55);clip-path:polygon(12px 0,100% 0,100% 100%,0 100%,0 12px);font-family:Barlow}
+body.hud .jvin button{border-radius:4px;border:1.5px solid var(--fr);background:rgba(0,0,0,.5);color:var(--fr)}
+body.hud .jvin #jvMic{border-radius:50%;border:2px solid var(--pk);color:#fff;background:radial-gradient(var(--pk),#5a0718);box-shadow:0 0 16px var(--pk)}
+.jvb2{display:block;width:92px;margin-top:5px;font:900 7px Orbitron;letter-spacing:.14em;color:#fff;padding:5px 0;background:linear-gradient(180deg,var(--pk),#8a0f22);clip-path:polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);box-shadow:0 0 10px var(--pk)}
+.dayc{height:136px}

@@ -74,7 +74,25 @@
                 <action android:name="com.cy.launcher.JARVIS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VOICE_COMMAND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
+
+        <!-- Ícono «J.A.R.V.I.S.» dentro del mismo APK: abre el launcher directo en J.A.R.V.I.S. -->
+        <activity-alias
+            android:name=".JarvisAlias"
+            android:exported="true"
+            android:label="J.A.R.V.I.S."
+            android:icon="@mipmap/ic_jarvis"
+            android:roundIcon="@mipmap/ic_jarvis"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <!-- Permite leer y controlar la música que suena (Spotify, YouTube Music...) -->
         <service
