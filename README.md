@@ -53,7 +53,14 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
-### Aura v1.7 (nuevo)
+### Aura v1.8: estilo Hacker HUD (nuevo, predeterminado)
+- Recreado del tema "Hacker / Stark Industries": marcos HUD naranjas con esquinas cortadas sobre niebla turquesa.
+- **Principal**: cobertura global (mapa mundial con radar en tu ubicación, clima y coordenadas), celdas de **energía** brillantes según tu batería (se animan al cargar), diagnóstico real del sistema (CPU, MHz, temperatura, autonomía, RAM, almacenamiento, fecha), botones **ACCESS** (cajón) y **ONLINE** (J.A.R.V.I.S.), tarjeta con núcleo animado.
+- **CLASSIFIED**: barra de carga, calendario tipo tambor deslizable, BUSCAR APPS, núcleo con cable y tus apps en cajas azules.
+- **Media**: casete con carretes que giran al sonar música (toca para pausar/cambiar) y noticias con imagen, contador "01" y ATRÁS / SIGUIENTE.
+- Arranque con terminal hacker (CARGANDO → COMPLETO → ACCESO CONCEDIDO), 5 colores de HUD; el estilo Holo sigue disponible en Ajustes.
+
+### Aura v1.7
 - **Inicio estilo HyperOS 3**: reloj crema con borde punteado que se llena con los minutos, clima de cristal, 4 columnas, píldora de búsqueda con orbe de J.A.R.V.I.S., dock de cristal y puntos de página.
 - **Página 2**: música (lo que suena en cualquier app), batería en anillo y próximo evento.
 - **Efectos**: brillo del color de cada ícono, inclinación del fondo y los widgets con el giroscopio, carpetas líquidas, transiciones Deslizar / Profundidad / Cubo.

@@ -10,7 +10,13 @@ function genWall(kind,W,H){
     if(tower){const tx=W*tower,u=H/2340;x.fillRect(tx-14*u,base-760*u,28*u,760*u);x.beginPath();x.moveTo(tx-40*u,base-560*u);x.lineTo(tx+40*u,base-560*u);x.lineTo(tx+26*u,base-470*u);x.lineTo(tx-26*u,base-470*u);x.fill();
       x.beginPath();x.ellipse(tx,base-610*u,52*u,38*u,0,0,7);x.fill();x.fillRect(tx-4*u,base-1020*u,8*u,280*u);x.fillRect(tx-90*u,base-200*u,180*u,200*u)}};
   const lights=(base,n,col)=>{for(let i=0;i<n;i++){x.fillStyle=col;x.globalAlpha=R()*.8+.2;x.fillRect(R()*W,base-R()*280*H/2340,2.2*W/1080,3*H/2340)}x.globalAlpha=1};
-  if(kind==='holo'){
+  if(kind==='cyber'){
+    x.fillStyle='#020609';x.fillRect(0,0,W,H);
+    [[.28,.42,'rgba(30,200,230,.55)',.42],[.12,.62,'rgba(20,150,190,.45)',.3],[.7,.3,'rgba(30,170,210,.25)',.3],[.85,.85,'rgba(255,120,50,.18)',.25],[.45,.2,'rgba(40,220,255,.22)',.25]].forEach(([a,b,col,r])=>blob(W*a,H*b,W*r,col,W*.12));
+    x.save();x.globalCompositeOperation='lighter';for(let i=0;i<46;i++){const yy=H*(.15+R()*.7),xx=W*(R()*.9-.1),ln=W*(.15+R()*.55);x.filter=`blur(${(2+R()*6)*W/1080}px)`;const g=x.createLinearGradient(xx,0,xx+ln,0);g.addColorStop(0,'rgba(60,230,255,0)');g.addColorStop(.5,`rgba(${80+R()*80|0},235,255,${.15+R()*.35})`);g.addColorStop(1,'rgba(60,230,255,0)');x.fillStyle=g;x.fillRect(xx,yy,ln,(1+R()*5)*H/2340)}
+    for(let i=0;i<70;i++){x.filter=`blur(${(1+R()*5)*W/1080}px)`;x.fillStyle=`rgba(${R()>.85?'255,140,70':'90,230,255'},${.12+R()*.4})`;x.beginPath();x.arc(W*R(),H*R(),(2+R()*16)*W/1080,0,7);x.fill()}x.restore();
+    x.fillStyle='rgba(0,0,0,.25)';x.fillRect(0,0,W,H);
+  }else if(kind==='holo'){
     x.fillStyle=lg([[0,'#06041a'],[.5,'#0a0626'],[1,'#020109']]);x.fillRect(0,0,W,H);
     [[.15,.18,'rgba(0,240,255,.55)'],[.9,.12,'rgba(255,43,214,.5)'],[.75,.5,'rgba(123,92,255,.6)'],[.1,.62,'rgba(255,43,214,.32)'],[.6,.9,'rgba(0,240,255,.42)']].forEach(([a,b,col])=>blob(W*a,H*b,W*(.3+R()*.15),col,W*.14));
     stars(260,H,.8);
@@ -62,4 +68,4 @@ function genWall(kind,W,H){
   /* grano suave */
   const id=x.getImageData(0,0,W,H),d=id.data;for(let i=0;i<d.length;i+=4){const n=(R()-.5)*10;d[i]+=n;d[i+1]+=n;d[i+2]+=n}x.putImageData(id,0,0);
   return c}
-const WALLS=[['holo','Holograma'],['prism','Prisma'],['sunset','Atardecer'],['aurora','Aurora'],['neon','Neón'],['ocean','Océano'],['galaxy','Galaxia'],['lava','Lava']];
+const WALLS=[['cyber','Cyber'],['holo','Holograma'],['prism','Prisma'],['sunset','Atardecer'],['aurora','Aurora'],['neon','Neón'],['ocean','Océano'],['galaxy','Galaxia'],['lava','Lava']];

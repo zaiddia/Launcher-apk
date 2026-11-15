@@ -220,6 +220,7 @@ body.sheetOpen #sheet{transform:none;visibility:visible;transition:transform .42
 #toast.on{opacity:1;transform:translate(-50%,0)}
 .spin{animation:spin 1s linear infinite}
 __HOLO_CSS__
+__HUD_CSS__
 /* noticias (adaptado) */
 __FEED_CSS__
 #feed{background:rgba(10,12,18,.94)!important;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
@@ -242,6 +243,7 @@ __JV_CSS__
   <button id="srch"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg><span id="srchT">Buscar</span><span class="orb" id="jvb"></span></button>
   <div id="dock"></div>
 </main>
+<div id="sysinfo"><b>SYSTEM INFORMATION</b><small id="sysS"></small></div>
 <div id="editbar"><button id="eCancel">Cancelar</button><div class="mid"><button id="eAdd" aria-label="add"></button><button id="eSet" aria-label="settings"></button></div><button id="eDone">Hecho</button></div>
 <section id="drawer"><div class="dtop"><div class="dsr"><span id="dsI"></span><input id="dq" type="search" autocomplete="off"><button class="orb" id="dOrb" aria-label="JARVIS"></button></div><div class="dcnt" id="dCnt"></div></div>
   <div class="dbody" id="dbody"><div id="dlist"></div></div><div class="az" id="az"></div><div class="azb" id="azb"></div></section>
@@ -272,7 +274,7 @@ __WALLS__
 /* ---------- textos ---------- */
 const L={
 es:{loc:'es-CO',search:'Buscar',drawerS:'Buscar apps…',apps:'apps',hiddenApps:'Apps ocultas',show:'Mostrar',cancel:'Cancelar',done:'Hecho',
-  home:'Ajustes de pantalla de inicio',trans:'Efectos de transición',slide:'Deslizar',depth:'Profundidad',cube:'Cubo',labels:'Mostrar etiquetas',hfx:'Efectos holográficos',hfxS:'Bordes iridiscentes animados, rejilla, partículas y escaneo',liquid:'Carpeta líquida',glow:'Efecto brillo',tilt:'Inclinación',tiltS:'El fondo y los widgets se mueven al inclinar el celular',
+  home:'Ajustes de pantalla de inicio',trans:'Efectos de transición',slide:'Deslizar',depth:'Profundidad',cube:'Cubo',labels:'Mostrar etiquetas',skin:'Estilo',hudc:'Color del HUD',bootA:'Animación de arranque',bootS:'Terminal hacker al abrir el launcher',hfx:'Efectos holográficos',hfxS:'Bordes iridiscentes animados, rejilla, partículas y escaneo',liquid:'Carpeta líquida',glow:'Efecto brillo',tilt:'Inclinación',tiltS:'El fondo y los widgets se mueven al inclinar el celular',
   wall:'Fondo de pantalla',myPhoto:'Tu foto',applySys:'Aplicar también al fondo del sistema',wallOk:'Fondo del sistema actualizado',accent:'Color',widgets:'Widgets',wClock:'Reloj',wWx:'Clima',wMusic:'Música',wBat:'Batería',wEv:'Próximo evento',
   isize:'Tamaño de íconos',cols:'Columnas',regen:'Regenerar todos los íconos',more:'Más ajustes',name:'Nombre',location:'Ubicación',locate:'Usar mi ubicación',city:'Buscar ciudad…',clock24:'Reloj 24 horas',unit:'Temperatura',
   setHome:'Usar como pantalla de inicio',musicAcc:'Ver lo que suena (acceso a notificaciones)',calSync:'Eventos del calendario del celular',news:'Noticias al deslizar a la derecha',gestures:'Gestos de navegación',
@@ -285,7 +287,7 @@ es:{loc:'es-CO',search:'Buscar',drawerS:'Buscar apps…',apps:'apps',hiddenApps:
   newsT:'Noticias',forYou:'Para ti',topics:['Para ti','Colombia','Mundo','Economía','Tecnología','Deportes','Entretenimiento','Ciencia','Salud'],nwOnly:'Las noticias funcionan en la versión APK.',nwErr:'No se pudieron cargar las noticias. Revisa tu conexión.',nwLoad:'Cargando noticias…',ago:['ahora','hace {n} min','hace {n} h','hace {n} d'],
   hours:'h',min:'min',dis:'Se descarga en',fullIn:'Llena en',calc:'Calculando…'},
 en:{loc:'en-US',search:'Search',drawerS:'Search apps…',apps:'apps',hiddenApps:'Hidden apps',show:'Show',cancel:'Cancel',done:'Done',
-  home:'Home screen settings',trans:'Transition effects',slide:'Slide',depth:'Depth',cube:'Cube',labels:'Show labels',hfx:'Holographic effects',hfxS:'Animated iridescent edges, grid, particles and scan',liquid:'Liquid folder',glow:'Glow effect',tilt:'Tilt',tiltS:'Wallpaper and widgets move as you tilt the phone',
+  home:'Home screen settings',trans:'Transition effects',slide:'Slide',depth:'Depth',cube:'Cube',labels:'Show labels',skin:'Style',hudc:'HUD color',bootA:'Boot animation',bootS:'Hacker terminal when the launcher starts',hfx:'Holographic effects',hfxS:'Animated iridescent edges, grid, particles and scan',liquid:'Liquid folder',glow:'Glow effect',tilt:'Tilt',tiltS:'Wallpaper and widgets move as you tilt the phone',
   wall:'Wallpaper',myPhoto:'Your photo',applySys:'Also apply to system wallpaper',wallOk:'System wallpaper updated',accent:'Color',widgets:'Widgets',wClock:'Clock',wWx:'Weather',wMusic:'Music',wBat:'Battery',wEv:'Next event',
   isize:'Icon size',cols:'Columns',regen:'Regenerate all icons',more:'More settings',name:'Name',location:'Location',locate:'Use my location',city:'Search city…',clock24:'24-hour clock',unit:'Temperature',
   setHome:'Set as home screen',musicAcc:'See what is playing (notification access)',calSync:'Phone calendar events',news:'News when swiping right',gestures:'Navigation gestures',
@@ -305,11 +307,11 @@ for(const k in L){L[k].news=L[k].newsT}
 const KEY='aura.v1';
 const NEO=[['#00F0FF','#FF2BD6'],['#22D3EE','#3B82F6'],['#A78BFA','#EC4899'],['#34D399','#06B6D4'],['#FBBF24','#F97316'],['#F472B6','#8B5CF6'],['#A3E635','#10B981'],['#60A5FA','#6366F1'],['#FB7185','#F43F5E']];
 const COLORS=NEO.map(x=>x[0]);
-const DEF={v:2,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
+const DEF={v:3,skin:'hud',hudc:'orange',boot:true,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
   w:{clock:true,wx:true,music:true,bat:true,ev:true},pages:null,dock:null,folders:{},hidden:[],labels2:{},gc:{},page:0,
   wxLoc:null,wx:null,unit:'C',h24:true,events:[],calSync:false,feedOn:true,feedTopic:0,homeAsked:false,gAsked:false,jvTalk:true,jvProv:'',jvKey:'',jvModel:'',jvVoice:''};
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
-if((S.v|0)<2){S.v=2;S.wall='holo';S.neo=0;S.trans='holo';S.hfx=true;try{Object.keys(localStorage).filter(x=>x.startsWith('wall:')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
+if((S.v|0)<3){S.v=3;S.skin='hud';S.hudc='orange';S.boot=true;S.wall='cyber';S.neo=0;S.trans='holo';S.hfx=true;try{Object.keys(localStorage).filter(x=>x.startsWith('wall:')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
 if(!S.lang){const n=(navigator.language||'es').slice(0,2);S.lang=L[n]?n:'es'}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const T=()=>L[S.lang]||L.es;
@@ -327,7 +329,7 @@ if(has('edgeToEdge')){try{const j=JSON.parse(Android.edgeToEdge());onInsets(j.to
 /* ---------- tema ---------- */
 function applyTheme(){S.style='neo';const p=NEO[S.neo|0]||NEO[0];S.acc=p[0];const R=document.documentElement.style;R.setProperty('--acc',p[0]);R.setProperty('--acc2',p[1]);
   R.setProperty('--isz',S.isz+'px');R.setProperty('--cols',S.cols);
-  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nohfx',!S.hfx);document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
+  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nohfx',!S.hfx);document.body.classList.toggle('hud',S.skin==='hud');if(S.skin==='hud'){hudColors();const ss=$('#sysS');if(ss)ss.innerHTML=esc(H().sysS)+'<br>'+esc(H().conn)+': '+(navigator.onLine?'ONLINE':'OFFLINE')}document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
 
 /* ---------- fondo ---------- */
 const WDB={db:null,open(){return new Promise((res,rej)=>{const r=indexedDB.open('auraWall',1);r.onupgradeneeded=()=>r.result.createObjectStore('w');r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error)})},
@@ -355,7 +357,7 @@ function tiltFrame(){raf=0;tc.x+=(tt.x-tc.x)*.12;tc.y+=(tt.y-tc.y)*.12;const R=d
   if(Math.abs(tt.x-tc.x)>.002||Math.abs(tt.y-tc.y)>.002)raf=requestAnimationFrame(tiltFrame)}
 function tiltSetup(){const want=!!S.tilt&&!document.hidden;if(want&&!tiltOn){window.addEventListener('deviceorientation',onOri);tiltOn=true;base=null}
   else if(!want&&tiltOn){window.removeEventListener('deviceorientation',onOri);tiltOn=false;tt={x:0,y:0};if(!raf)raf=requestAnimationFrame(tiltFrame)}}
-document.addEventListener('visibilitychange',()=>{tiltSetup();if(!document.hidden){tick();refreshLive()}});
+document.addEventListener('visibilitychange',()=>{tiltSetup();if(typeof hudTick==='function')hudTick();if(!document.hidden){tick();refreshLive()}});
 
 /* ---------- apps ---------- */
 const APPS={whatsapp:{n:'WhatsApp',i:'chat',pkg:'com.whatsapp'},instagram:{n:'Instagram',i:'insta',pkg:'com.instagram.android'},youtube:{n:'YouTube',i:'yt',pkg:'com.google.android.youtube'},
@@ -421,10 +423,10 @@ function updClockW(){const d=new Date(),m=$('#wcm');if(m)m.setAttribute('stroke-
 
 /* ---------- páginas ---------- */
 let POS=0;
-function pagesCount(){return Math.max(1,S.pages.length)}
-function renderHome(anim){const pg=$('#pager');let h='';S.pages.forEach((items,i)=>{h+=`<div class="page" data-pi="${i}">${widgetsFor(i)}<div class="grid" data-c="p${i}">${items.map((id,k)=>iconHTML(id,k)).join('')}</div></div>`});
+function pagesCount(){return Math.max(1,S.pages.length+OFF())}
+function renderHome(anim){const pg=$('#pager');let h='';const off=OFF(),hud=HUDON();for(let vi=0;vi<S.pages.length+off;vi++){const items=vi<off?null:S.pages[vi-off];h+=`<div class="page" data-pi="${vi}">${hud?hudPanels(vi):widgetsFor(vi)}${items?`<div class="grid" data-c="p${vi-off}">${items.map((id,k)=>iconHTML(id,k)).join('')}</div>`:''}</div>`}
   pg.innerHTML=h;$('#dock').style.setProperty('--dn',Math.max(1,S.dock.length));$('#dock').innerHTML=S.dock.map((id,k)=>iconHTML(id,k)).join('');$('#dock').dataset.c='dock';
-  renderDots();layoutPages(S.page|0);updClockW();if(anim)animIn()}
+  renderDots();if((S.page|0)>=pagesCount())S.page=pagesCount()-1;layoutPages(S.page|0);updClockW();if(hud){frames(pg);hudUpdate();hudFit();hudCenterDrum();document.fonts&&document.fonts.ready.then(()=>{frames(pg);hudFit()})}else $$('#pager .page').forEach(p=>p.style.zoom='');if(anim)animIn()}
 function animIn(){const p=$(`.page[data-pi="${S.page|0}"]`);if(!p)return;let k=0;p.querySelectorAll('.wg,.ai').forEach(el=>el.style.setProperty('--k',k++));p.classList.remove('in');void p.offsetWidth;p.classList.add('in');clearTimeout(animIn._t);animIn._t=setTimeout(()=>p.classList.remove('in'),1200)}
 function renderDots(){const n=pagesCount();$('#dots').innerHTML=(S.feedOn?'<i class="fd"></i>':'')+Array.from({length:n},(_,i)=>`<i class="${i===(S.page|0)?'on':''}"></i>`).join('')}
 function layoutPages(pos){POS=pos;const W=$('#pager').clientWidth||innerWidth;$$('.page').forEach(el=>{const i=+el.dataset.pi,d=i-pos,a=Math.abs(d);let tr='';
@@ -442,7 +444,7 @@ function goPage(i,anim=true){i=Math.max(0,Math.min(pagesCount()-1,i));const from
 /* ---------- gestos en inicio: páginas, cajón, noticias, notificaciones ---------- */
 (()=>{const hm=$('#home');let sx=0,sy=0,st=0,lock=0,dx=0,dy=0,W=1,feed=false,drw=false,startEl=null;
   const blocked=()=>document.body.classList.contains('sheetOpen')||document.body.classList.contains('drawerOpen')||document.body.classList.contains('feedOpen')||document.body.classList.contains('folderOpen')||$('#ctx').classList.contains('on')||DRAG.on||document.body.classList.contains('jvOpen');
-  hm.addEventListener('touchstart',e=>{lock=0;feed=drw=false;if(e.touches.length>1||blocked()){lock=-1;return}const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();dx=dy=0;W=innerWidth;startEl=e.target},{passive:true});
+  hm.addEventListener('touchstart',e=>{lock=0;feed=drw=false;if(e.touches.length>1||blocked()){lock=-1;return}if(e.target.closest('.nosw')){lock=-1;return}const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();dx=dy=0;W=innerWidth;startEl=e.target},{passive:true});
   hm.addEventListener('touchmove',e=>{if(lock<0)return;const t=e.touches[0];dx=t.clientX-sx;dy=t.clientY-sy;
     if(!lock){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.2){lock=1;feed=(S.page|0)===0&&dx>0&&S.feedOn&&!document.body.classList.contains('editing');if(feed){$('#feed').classList.add('drag');openFeedPrep()}}
       else if(Math.abs(dy)>10){lock=2;drw=dy<0&&!document.body.classList.contains('editing');if(drw){openDrawerPrep();$('#drawer').classList.add('drag')}}else return}
@@ -483,7 +485,7 @@ let SNAP=null;
 function startEdit(){if(document.body.classList.contains('editing'))return;SNAP=JSON.stringify({p:S.pages,d:S.dock,f:S.folders});document.body.classList.add('editing');
   if(S.pages[S.pages.length-1].length)S.pages.push([]);renderHome()}
 function endEdit(keep){if(!keep&&SNAP){const o=JSON.parse(SNAP);S.pages=o.p;S.dock=o.d;S.folders=o.f}document.body.classList.remove('editing');S.pages=S.pages.filter((p,i)=>p.length||i===0);if(!S.pages.length)S.pages=[[]];
-  if((S.page|0)>=S.pages.length)S.page=S.pages.length-1;save();renderHome(true)}
+  if((S.page|0)>=pagesCount())S.page=pagesCount()-1;save();renderHome(true)}
 $('#eCancel').onclick=()=>endEdit(false);$('#eDone').onclick=()=>{hap();endEdit(true)};$('#eSet').onclick=homeSettings;$('#eAdd').onclick=()=>pickToHome();
 function locate(id){for(let i=0;i<S.pages.length;i++){const k=S.pages[i].indexOf(id);if(k>=0)return{arr:S.pages[i],k}}const k=S.dock.indexOf(id);if(k>=0)return{arr:S.dock,k};return null}
 function removeFromHome(id){const l=locate(id);if(!l)return;l.arr.splice(l.k,1);if(id.startsWith('f:')){const f=S.folders[id.slice(2)];delete S.folders[id.slice(2)]}hap();save();renderHome()}
@@ -501,11 +503,11 @@ function dragEnd(e){const id=DRAG.id,hov=DRAG.hover,folder=hov&&hov.classList.co
       else{const fid='f'+Date.now().toString(36);S.folders[fid]={name:T().folder,apps:[tid.replace(/^p:/,''),id.replace(/^p:/,'')]};const t2=locate(tid);t2.arr[t2.k]='f:'+fid}hap('long')}
     else{from.arr.splice(from.k,1);const t2=locate(hov.dataset.id);const pos=t2.k+(from.arr===t2.arr&&from.k<=t2.k?1:0);t2.arr.splice(pos,0,id)}}
   else if(inDock){if(from.arr!==S.dock&&S.dock.length>=5){toast('Dock: 5 máx.');return}from.arr.splice(from.k,1);S.dock.push(id)}
-  else{const page=S.pages[S.page|0];from.arr.splice(from.k,1);page.push(id)}
+  else{const page=S.pages[Math.max(0,(S.page|0)-OFF())];from.arr.splice(from.k,1);page.push(id)}
   save();renderHome()}
 function pickToHome(){const t=T(),L0=installed();sheet(`<h3>${esc(t.pickApps)}</h3><div class="pick">${L0.map(a=>iconHTML('p:'+a.p,0).replace('class="ai"','class="ai" data-pick="1"')).join('')}</div>`);
   $('#sheetIn').onclick=e=>{const b=e.target.closest('.ai');if(!b)return;addToHome(b.dataset.id);b.style.opacity=.35}}
-function addToHome(id){if(locate(id)){toast(T().added);return}let pg=S.pages.find((p,i)=>p.length<(i===0?8:24));if(!pg){pg=[];S.pages.push(pg);toast(T().full)}else toast(T().added);pg.push(id);save();renderHome()}
+function addToHome(id){if(locate(id)){toast(T().added);return}let pg=S.pages.find((p,i)=>p.length<(i===0||(HUDON()&&i===1)?8:24));if(!pg){pg=[];S.pages.push(pg);toast(T().full)}else toast(T().added);pg.push(id);save();renderHome()}
 
 /* ---------- carpeta líquida ---------- */
 let OPENF=null;
@@ -593,7 +595,9 @@ function closeSheet(){document.body.classList.remove('sheetOpen');document.activ
 $('#scrim').onclick=closeSheet;$('#sheet').addEventListener('click',e=>{if(e.target.closest('[data-x]'))closeSheet()});
 function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${esc(l)}${s?`<small>${esc(s)}</small>`:''}</span><button class="sw ${(path?S[path][k]:S[k])?'on':''}" data-k="${k}" ${path?`data-path="${path}"`:''}></button></div>`;
   sheet(`<h3><button class="x" data-x>${ic('close')}</button>${esc(t.home)}</h3>
-  <div class="grp"><div class="row"><span>${esc(t.trans)}</span><div class="seg">${[['holo','Holo'],['slide',t.slide],['depth',t.depth],['cube',t.cube]].map(([v,l])=>`<button data-tr="${v}" class="${S.trans===v?'on':''}">${esc(l)}</button>`).join('')}</div></div>
+  <div class="grp"><div class="row"><span>${esc(t.skin)}</span><div class="seg">${[['hud','Hacker HUD'],['holo','Holo']].map(([v,l])=>`<button data-sk="${v}" class="${S.skin===v?'on':''}">${l}</button>`).join('')}</div></div>
+  ${S.skin==='hud'?`<div class="row"><span>${esc(t.hudc)}</span><div class="pal" style="padding:0">${Object.keys(HUDC).map(k=>`<button data-hc="${k}" class="${S.hudc===k?'on':''}" style="--c:${HUDC[k][0]};--cr:${HUDC[k][0]};width:26px;height:26px"></button>`).join('')}</div></div>${sw('boot',t.bootA,t.bootS)}`:''}</div>
+  <div class="grp" style="margin-top:12px"><div class="row wrap"><span>${esc(t.trans)}</span><div class="seg">${[['holo','Holo'],['slide',t.slide],['depth',t.depth],['cube',t.cube]].map(([v,l])=>`<button data-tr="${v}" class="${S.trans===v?'on':''}">${esc(l)}</button>`).join('')}</div></div>
   ${sw('hfx',t.hfx,t.hfxS)}${sw('labels',t.labels)}${sw('liquid',t.liquid)}${sw('glow',t.glow)}${sw('tilt',t.tilt,t.tiltS)}</div>
   <h4>${esc(t.wall)}</h4><div class="walls" id="walls">${WALLS.map(([k,n])=>`<button data-w="${k}" class="${S.wall===k?'on':''}"><span>${esc(n)}</span></button>`).join('')}<button data-w="photo" class="${S.wall==='photo'?'on':''}" style="display:grid;place-items:center">${ic('image')}<span>${esc(t.myPhoto)}</span></button></div>
   ${has('setWallpaper')?`<button class="btn alt" id="wSys" style="width:100%;margin-top:10px">${esc(t.applySys)}</button>`:''}
@@ -603,6 +607,8 @@ function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${e
   <div class="row"><span>${esc(t.cols)}</span><div class="seg">${[4,5].map(v=>`<button data-co="${v}" class="${S.cols===v?'on':''}">${v}</button>`).join('')}</div></div></div>
   <div class="grp" style="margin-top:14px"><button class="row link" id="regen" style="width:100%">${esc(t.regen)}</button><button class="row link" id="moreS" style="width:100%">${esc(t.more)}<span>›</span></button></div>`);
   const I2=$('#sheetIn');
+  I2.querySelectorAll('[data-sk]').forEach(b=>b.onclick=async()=>{S.skin=b.dataset.sk;if(S.skin==='hud'&&S.wall!=='photo')S.wall='cyber';else if(S.skin==='holo'&&S.wall==='cyber')S.wall='holo';S.page=0;save();applyTheme();await applyWall();renderHome(true);homeSettings();if(S.skin==='hud')hudBoot()});
+  I2.querySelectorAll('[data-hc]').forEach(b=>b.onclick=()=>{S.hudc=b.dataset.hc;save();applyTheme();renderHome();homeSettings()});
   I2.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k,pth=b.dataset.path;if(pth)S[pth][k]=!S[pth][k];else S[k]=!S[k];save();hap('tick');b.classList.toggle('on');applyTheme();if(pth)renderHome()});
   I2.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{S.trans=b.dataset.tr;save();I2.querySelectorAll('[data-tr]').forEach(x=>x.classList.toggle('on',x===b));const n=pagesCount();if(n>1){const p=S.page|0;goPage(p===0?1:0);setTimeout(()=>goPage(p),600)}});
   I2.querySelectorAll('[data-is]').forEach(b=>b.onclick=()=>{S.isz=+b.dataset.is;save();applyTheme();homeSettings()});
@@ -623,7 +629,7 @@ function moreSettings(){const t=T();
   <div class="grp" style="margin-top:14px">
   ${NATIVE?`<button class="row link" id="hmB" style="width:100%">${esc(t.setHome)}<span>›</span></button><button class="row link" id="gsB" style="width:100%">${esc(t.gestures)}<span>›</span></button><button class="row link" id="maB" style="width:100%">${esc(t.musicAcc)}<span>›</span></button>`:''}
   <button class="row link" id="jvS" style="width:100%">J.A.R.V.I.S.<span>›</span></button></div>
-  <p style="font-size:11px;color:#8F99A9;margin-top:16px;text-align:center">Aura · v1.7 · ${NATIVE?'APK':'Web'}</p>`);
+  <p style="font-size:11px;color:#8F99A9;margin-top:16px;text-align:center">Aura · v1.8 · ${NATIVE?'APK':'Web'}</p>`);
   $('#sN').oninput=e=>{S.name=e.target.value;save()};$('#locB').onclick=citySheet;$('#s24').onclick=()=>{S.h24=!S.h24;save();renderHome();moreSettings()};
   $$('#sheetIn [data-u]').forEach(b=>b.onclick=()=>{S.unit=b.dataset.u;save();loadWx(true);moreSettings()});
   $('#sFd').onclick=()=>{S.feedOn=!S.feedOn;save();renderDots();moreSettings()};
@@ -663,11 +669,11 @@ window.onCalendarEvents=json=>{NEV=mapNEV(json);NEVt=Date.now();refreshWidgets()
 function refreshNEV(force){if(!(S.calSync&&has('calendarEventsAsync')&&Android.hasCalendar())){NEV=[];return}if(!force&&Date.now()-NEVt<60e3)return;NEVt=Date.now();Android.calendarEventsAsync(120)}
 function nextOcc(e,td){if(!e.yearly)return e.date>=td?e.date:null;const y=+td.slice(0,4);let c=y+e.date.slice(4);if(c<td)c=(y+1)+e.date.slice(4);return c<e.date?e.date:c}
 function upcoming(){const td=ymd(new Date());return [...S.events,...NEV].map(e=>({e,d:nextOcc(e,td)})).filter(x=>x.d).sort((a,b)=>(a.d+(a.e.start||'')).localeCompare(b.d+(b.e.start||'')))}
-function refreshWidgets(){$$('.page').forEach(p=>{const i=+p.dataset.pi;const old=p.querySelectorAll('.wrow');const h=widgetsFor(i);const tmp=document.createElement('div');tmp.innerHTML=h;
+function refreshWidgets(){if(HUDON()){hudUpdate();return}$$('.page').forEach(p=>{const i=+p.dataset.pi;const old=p.querySelectorAll('.wrow');const h=widgetsFor(i);const tmp=document.createElement('div');tmp.innerHTML=h;
     if(old.length===tmp.children.length&&[...old].every((o,k)=>o.innerHTML===tmp.children[k].innerHTML))return;old.forEach(o=>o.remove());p.insertAdjacentHTML('afterbegin',h)});updClockW()}
 function refreshLive(){if(NATIVE)nativeDev();pollMedia();refreshNEV();loadWx(false);refreshWidgets()}
 $('#pager').addEventListener('click',e=>{const m=e.target.closest('[data-m]');if(m){e.stopPropagation();hap();cmd(m.dataset.m);return}const w=e.target.closest('[data-w]');if(!w||document.body.classList.contains('editing'))return;hap();
-  const k=w.dataset.w;if(k==='clock'){has('openClock')&&Android.openClock()}else if(k==='wx'){S.wxLoc?loadWx(true):geoLocate(false)}else if(k==='bat'){has('openPanel')&&Android.openPanel('battery')}else if(k==='ev'){jvOpen(false,S.lang==='en'?'What do I have this week?':'¿Qué tengo esta semana?')}else if(k==='music'){NP&&NP.pkg?launchPkg(NP.pkg,null):(has('requestMediaAccess')&&!Android.hasMediaAccess()?Android.requestMediaAccess():null)}});
+  const k=w.dataset.w;if(k==='access'){openDrawer();return}if(k==='search'){openDrawer(true);return}if(k==='online'||k==='jv'||k==='mic'){jvOpen(true);return}if(k==='clock'){has('openClock')&&Android.openClock()}else if(k==='wx'){S.wxLoc?loadWx(true):geoLocate(false)}else if(k==='bat'){has('openPanel')&&Android.openPanel('battery')}else if(k==='ev'){jvOpen(false,S.lang==='en'?'What do I have this week?':'¿Qué tengo esta semana?')}else if(k==='music'){NP&&NP.pkg?launchPkg(NP.pkg,null):(has('requestMediaAccess')&&!Android.hasMediaAccess()?Android.requestMediaAccess():null)}});
 function tick(){const d=new Date();let h=d.getHours();if(!S.h24)h=h%12||12;const e=$('#wct');if(e){e.textContent=pad(h)+':'+pad(d.getMinutes());$('#wcd').textContent=fmt(d,{weekday:'short',day:'numeric',month:'short'})}updClockW()}
 function schedTick(){tick();clearTimeout(schedTick._t);schedTick._t=setTimeout(schedTick,60000-Date.now()%60000+60)}
 
@@ -688,16 +694,17 @@ function schedTick(){tick();clearTimeout(schedTick._t);schedTick._t=setTimeout(s
 __GEST_JS__
 __JARVIS_JS__
 __FEED_JS__
+__HUD_JS__
 
 /* ---------- arranque ---------- */
 window.onAndroidBack=()=>{if(document.body.classList.contains('sheetOpen'))closeSheet();else if(JV.on)jvClose();else if($('#ctx').classList.contains('on'))closeCtx();else if(OPENF)closeFolder();else if(document.body.classList.contains('feedOpen'))closeFeed();
   else if(document.body.classList.contains('drawerOpen'))closeDrawer();else if(document.body.classList.contains('editing'))endEdit(true);else if((S.page|0)!==0)goPage(0)};
 window.onAndroidHome=()=>{if(JV.on){jvClose();return}if(document.body.classList.contains('sheetOpen'))closeSheet();closeCtx();if(OPENF)closeFolder();if(document.body.classList.contains('feedOpen'))closeFeed();
   if(document.body.classList.contains('drawerOpen')){closeDrawer();return}if(document.body.classList.contains('editing')){endEdit(true);return}if((S.page|0)!==0)goPage(0);else animIn()};
-window.onAndroidResume=()=>{renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
+window.onAndroidResume=()=>{hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
 window.addEventListener('resize',()=>layoutPages(S.page|0));
 if(!S.pages||!S.dock)defaultLayout();cleanLayout();
-applyTheme();applyWall();renderHome(true);schedTick();
+applyTheme();applyWall();renderHome(true);schedTick();hudBoot();hudTick();if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
 if(NATIVE){nativeDev();setInterval(()=>{if(!document.hidden&&(S.page|0)===1){nativeDev();refreshWidgets()}},30000)}
 pollMedia();refreshNEV(true);if(S.wxLoc)loadWx(false);else setTimeout(()=>geoLocate(true),1500);
 if(NATIVE&&has('gestureStatus')&&!S.gAsked){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}

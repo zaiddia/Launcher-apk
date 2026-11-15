@@ -44,8 +44,8 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.7.${{ github.run_number }}
-          name: Launchers v1.7.${{ github.run_number }}
+          tag_name: v1.8.${{ github.run_number }}
+          name: Launchers v1.8.${{ github.run_number }}
           make_latest: true
           files: |
             out/Launcher-CY.apk
