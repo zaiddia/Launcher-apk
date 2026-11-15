@@ -5,6 +5,7 @@ Dos pantallas de inicio para Android, optimizadas para el **Redmi Note 13 Pro+ 5
 | Tema | Carpeta | APK |
 |---|---|---|
 | **Launcher 27**: estilo iOS 27, con reloj gigante, mapa mundial, vinilo con letras sincronizadas, calendario y "faltan X días" | `web27/` | `Launcher-27.apk` |
+| **Aura**: estilo HyperOS 3 con colores vibrantes: widgets de cristal, brillo en los íconos, inclinación (giroscopio), carpetas líquidas, transiciones Deslizar/Profundidad/Cubo, 6 fondos generados + tu foto, J.A.R.V.I.S., noticias y gestos | `webaura/` | `Aura.apk` |
 | **Launcher CY**: estilo KLWP, con cabecera negra y esquina doblada, reloj, calendario, música y clima | `web/` | `Launcher-CY.apk` |
 
 Son apps distintas: puedes instalar las dos y elegir cuál usar como inicio.
@@ -13,7 +14,7 @@ Son apps distintas: puedes instalar las dos y elegir cuál usar como inicio.
 
 ## Descargar e instalar (APK)
 
-➡️ **[Descargar la última versión](../../releases/latest)**: elige `Launcher-27.apk` o `Launcher-CY.apk`.
+➡️ **[Descargar la última versión](../../releases/latest)**: elige `Aura.apk`, `Launcher-27.apk` o `Launcher-CY.apk` (se pueden instalar las tres a la vez).
 
 1. Abre el APK en el celular. Si te pide permiso, activa **"Permitir de esta fuente"**.
 2. Abre el launcher. Te pedirá hacerlo tu pantalla de inicio; toca **OK** y elígelo.
@@ -52,6 +53,15 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
+### Aura v1.7 (nuevo)
+- **Inicio estilo HyperOS 3**: reloj crema con borde punteado que se llena con los minutos, clima de cristal, 4 columnas, píldora de búsqueda con orbe de J.A.R.V.I.S., dock de cristal y puntos de página.
+- **Página 2**: música (lo que suena en cualquier app), batería en anillo y próximo evento.
+- **Efectos**: brillo del color de cada ícono, inclinación del fondo y los widgets con el giroscopio, carpetas líquidas, transiciones Deslizar / Profundidad / Cubo.
+- **Editar inicio**: mantén presionado un espacio vacío → los íconos tiemblan; arrastra para ordenar, suelta una app sobre otra para crear una carpeta o llévala al dock. Cancelar / ⚙ / Hecho.
+- **Ajustes de pantalla de inicio**: transiciones, etiquetas, carpeta líquida, brillo, inclinación, 6 fondos + tu foto (y aplicarlo al fondo del sistema), 8 colores, widgets, tamaño de íconos, columnas.
+- Desliza **arriba** = cajón A–Z de cristal; **derecha** = noticias; **abajo** = notificaciones; mantener un ícono = menú (desinstalar, compartir, info, accesos directos…).
+- Pantalla completa sin barras, gestos de navegación propios, bajo consumo (se pausa en segundo plano).
+
 ### Novedades de Launcher 27 v1.6
 - **Estilo Neo (futurista):** fondo oscuro con brillo de color, rejilla y esquinas tipo HUD, tarjeta de vidrio, degradados en 8 combinaciones modernas (cian/azul, violeta/rosa, menta/cian, ámbar/naranja…), reloj con brillo neón. El estilo **Clásico** del video sigue disponible en Ajustes.
 - **Detalles del video que faltaban:** línea con el ícono de la pestaña bajo la barra, CPU en porcentaje, "• • •" en Info del dispositivo, letras anterior/siguiente en gris, etiqueta vertical y número de pista en el vinilo.
@@ -89,6 +99,7 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 Se publica con GitHub Pages (activa *Settings → Pages → Source: GitHub Actions*):
 
 - Launcher 27: **https://zaiddia.github.io/Launcher-apk/ios27/**
+- Aura: **https://zaiddia.github.io/Launcher-apk/aura/**
 - Launcher CY: **https://zaiddia.github.io/Launcher-apk/**
 
 Ábrela en Chrome → ⋮ → **Instalar app**. La versión web no puede controlar Spotify, leer tu calendario ni ser la pantalla de inicio del sistema; para eso usa el APK.
@@ -98,6 +109,7 @@ Se publica con GitHub Pages (activa *Settings → Pages → Source: GitHub Actio
 ## Estructura
 ```
 web27/      Interfaz Launcher 27 (HTML/CSS/JS, mapa y fuentes incluidas)
+webaura/    Interfaz Aura (generada con tools/aura/build.py)
 web/        Interfaz Launcher CY
 android/    Proyecto Android Studio (WebView + funciones nativas), 2 variantes
 .github/    Compilación automática de APKs y publicación web
