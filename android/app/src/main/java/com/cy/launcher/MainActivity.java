@@ -68,6 +68,8 @@ import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.WindowManager;
+import android.os.PowerManager;
 import android.os.Environment;
 import android.os.StatFs;
 import android.provider.MediaStore;
@@ -103,9 +105,18 @@ import java.util.Map;
 
 public class MainActivity extends Activity {
     static volatile MainActivity act;
+    private final BroadcastReceiver powerReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context c, Intent i) {
+            boolean on = false;
+            try { on = ((PowerManager) getSystemService(Context.POWER_SERVICE)).isPowerSaveMode(); } catch (Exception ignored) { }
+            js("window.onPowerSave&&window.onPowerSave(" + on + ")");
+        }
+    };
     private static final int REQ_ALL = 31;
     private long lastNotifPush = 0;
+    private volatile boolean visible = false, notifPending = false;
     void notifChanged() {
+        if (!visible) { notifPending = true; return; }   // ahorro: no despertar la interfaz si no se ve
         long now = SystemClock.uptimeMillis();
         if (now - lastNotifPush < 400) return;
         lastNotifPush = now;
@@ -345,12 +356,17 @@ public class MainActivity extends Activity {
         super.onStart();
         if (web != null) { web.onResume(); web.resumeTimers(); }
         startMediaWatch();
+        visible = true;
+        try { registerReceiver(powerReceiver, new IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)); } catch (Exception ignored) { }
+        if (notifPending) { notifPending = false; notifChanged(); }
     }
 
     /** Ahorro de energía: con el launcher en segundo plano se detienen JavaScript y animaciones. */
     @Override
     protected void onStop() {
         super.onStop();
+        visible = false;
+        try { unregisterReceiver(powerReceiver); } catch (Exception ignored) { }
         stopMediaWatch();
         if (web != null && !keepAlive) { web.onPause(); web.pauseTimers(); }
     }
@@ -1545,6 +1561,38 @@ public class MainActivity extends Activity {
             for (String p : want) if (!granted(p)) miss.add(p);
             if (miss.isEmpty()) { js("window.onPerms&&window.onPerms()"); return; }
             runOnUiThread(() -> requestPermissions(miss.toArray(new String[0]), REQ_ALL));
+        }
+
+        /* ---------- ahorro de energía ---------- */
+        @JavascriptInterface
+        public boolean powerSave() {
+            try { return ((PowerManager) getSystemService(Context.POWER_SERVICE)).isPowerSaveMode(); } catch (Exception e) { return false; }
+        }
+
+        /** Frecuencia de pantalla preferida para el launcher: 0 = la del sistema, 60 = ahorro. */
+        @JavascriptInterface
+        public void setRefresh(int hz) {
+            runOnUiThread(() -> {
+                try {
+                    WindowManager.LayoutParams lp = getWindow().getAttributes();
+                    int want = 0;
+                    if (hz > 0) {
+                        android.view.Display d = getWindowManager().getDefaultDisplay();
+                        android.view.Display.Mode cur = d.getMode();
+                        float best = 1e9f;
+                        for (android.view.Display.Mode m : d.getSupportedModes()) {
+                            if (m.getPhysicalWidth() != cur.getPhysicalWidth() || m.getPhysicalHeight() != cur.getPhysicalHeight()) continue;
+                            float diff = Math.abs(m.getRefreshRate() - hz);
+                            if (diff < best) { best = diff; want = m.getModeId(); }
+                        }
+                    }
+                    if (lp.preferredDisplayModeId != want) {
+                        lp.preferredDisplayModeId = want;
+                        lp.preferredRefreshRate = hz > 0 ? hz : 0;
+                        getWindow().setAttributes(lp);
+                    }
+                } catch (Exception ignored) { }
+            });
         }
 
         @JavascriptInterface

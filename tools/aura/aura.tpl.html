@@ -276,7 +276,7 @@ __WALLS__
 /* ---------- textos ---------- */
 const L={
 es:{loc:'es-CO',search:'Buscar',drawerS:'Buscar apps…',apps:'apps',hiddenApps:'Apps ocultas',show:'Mostrar',cancel:'Cancelar',done:'Hecho',
-  home:'Ajustes de pantalla de inicio',trans:'Efectos de transición',slide:'Deslizar',depth:'Profundidad',cube:'Cubo',labels:'Mostrar etiquetas',skin:'Estilo',hudc:'Color del HUD',bootA:'Animación de arranque',bootS:'Terminal hacker al abrir el launcher',hfx:'Efectos holográficos',hfxS:'Bordes iridiscentes animados, rejilla, partículas y escaneo',liquid:'Carpeta líquida',glow:'Efecto brillo',tilt:'Inclinación',tiltS:'El fondo y los widgets se mueven al inclinar el celular',
+  home:'Ajustes de pantalla de inicio',trans:'Efectos de transición',slide:'Deslizar',depth:'Profundidad',cube:'Cubo',labels:'Mostrar etiquetas',saver:'Ahorro de batería',saverS:'Pausa los efectos al no tocar la pantalla y reduce todo con batería baja',hz60:'Pantalla a 60 Hz',hz60S:'Gasta menos batería; desactívalo para 120 Hz',skin:'Estilo',hudc:'Color del HUD',bootA:'Animación de arranque',bootS:'Terminal hacker al abrir el launcher',hfx:'Efectos holográficos',hfxS:'Bordes iridiscentes animados, rejilla, partículas y escaneo',liquid:'Carpeta líquida',glow:'Efecto brillo',tilt:'Inclinación',tiltS:'El fondo y los widgets se mueven al inclinar el celular',
   wall:'Fondo de pantalla',myPhoto:'Tu foto',applySys:'Aplicar también al fondo del sistema',wallOk:'Fondo del sistema actualizado',accent:'Color',widgets:'Widgets',wClock:'Reloj',wWx:'Clima',wMusic:'Música',wBat:'Batería',wEv:'Próximo evento',
   isize:'Tamaño de íconos',cols:'Columnas',regen:'Regenerar todos los íconos',more:'Más ajustes',name:'Nombre',location:'Ubicación',locate:'Usar mi ubicación',city:'Buscar ciudad…',clock24:'Reloj 24 horas',unit:'Temperatura',
   setHome:'Usar como pantalla de inicio',musicAcc:'Ver lo que suena (acceso a notificaciones)',calSync:'Eventos del calendario del celular',news:'Noticias al deslizar a la derecha',gestures:'Gestos de navegación',
@@ -289,7 +289,7 @@ es:{loc:'es-CO',search:'Buscar',drawerS:'Buscar apps…',apps:'apps',hiddenApps:
   newsT:'Noticias',forYou:'Para ti',topics:['Para ti','Colombia','Mundo','Economía','Tecnología','Deportes','Entretenimiento','Ciencia','Salud'],nwOnly:'Las noticias funcionan en la versión APK.',nwErr:'No se pudieron cargar las noticias. Revisa tu conexión.',nwLoad:'Cargando noticias…',ago:['ahora','hace {n} min','hace {n} h','hace {n} d'],
   hours:'h',min:'min',dis:'Se descarga en',fullIn:'Llena en',calc:'Calculando…'},
 en:{loc:'en-US',search:'Search',drawerS:'Search apps…',apps:'apps',hiddenApps:'Hidden apps',show:'Show',cancel:'Cancel',done:'Done',
-  home:'Home screen settings',trans:'Transition effects',slide:'Slide',depth:'Depth',cube:'Cube',labels:'Show labels',skin:'Style',hudc:'HUD color',bootA:'Boot animation',bootS:'Hacker terminal when the launcher starts',hfx:'Holographic effects',hfxS:'Animated iridescent edges, grid, particles and scan',liquid:'Liquid folder',glow:'Glow effect',tilt:'Tilt',tiltS:'Wallpaper and widgets move as you tilt the phone',
+  home:'Home screen settings',trans:'Transition effects',slide:'Slide',depth:'Depth',cube:'Cube',labels:'Show labels',saver:'Battery saver',saverS:'Pauses effects when idle and reduces everything on low battery',hz60:'60 Hz display',hz60S:'Uses less battery; turn off for 120 Hz',skin:'Style',hudc:'HUD color',bootA:'Boot animation',bootS:'Hacker terminal when the launcher starts',hfx:'Holographic effects',hfxS:'Animated iridescent edges, grid, particles and scan',liquid:'Liquid folder',glow:'Glow effect',tilt:'Tilt',tiltS:'Wallpaper and widgets move as you tilt the phone',
   wall:'Wallpaper',myPhoto:'Your photo',applySys:'Also apply to system wallpaper',wallOk:'System wallpaper updated',accent:'Color',widgets:'Widgets',wClock:'Clock',wWx:'Weather',wMusic:'Music',wBat:'Battery',wEv:'Next event',
   isize:'Icon size',cols:'Columns',regen:'Regenerate all icons',more:'More settings',name:'Name',location:'Location',locate:'Use my location',city:'Search city…',clock24:'24-hour clock',unit:'Temperature',
   setHome:'Set as home screen',musicAcc:'See what is playing (notification access)',calSync:'Phone calendar events',news:'News when swiping right',gestures:'Navigation gestures',
@@ -309,7 +309,7 @@ for(const k in L){L[k].news=L[k].newsT}
 const KEY='aura.v1';
 const NEO=[['#00F0FF','#FF2BD6'],['#22D3EE','#3B82F6'],['#A78BFA','#EC4899'],['#34D399','#06B6D4'],['#FBBF24','#F97316'],['#F472B6','#8B5CF6'],['#A3E635','#10B981'],['#60A5FA','#6366F1'],['#FB7185','#F43F5E']];
 const COLORS=NEO.map(x=>x[0]);
-const DEF={v:4,skin:'hud',hudc:'matrix',boot:true,shadow:true,permAsked:false,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
+const DEF={v:4,saver:true,hz60:false,skin:'hud',hudc:'matrix',boot:true,shadow:true,permAsked:false,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
   w:{clock:true,wx:true,music:true,bat:true,ev:true},pages:null,dock:null,folders:{},hidden:[],labels2:{},gc:{},page:0,
   wxLoc:null,wx:null,unit:'C',h24:true,events:[],calSync:false,feedOn:true,feedTopic:0,homeAsked:false,gAsked:false,jvTalk:true,jvProv:'',jvKey:'',jvModel:'',jvVoice:''};
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
@@ -331,7 +331,7 @@ if(has('edgeToEdge')){try{const j=JSON.parse(Android.edgeToEdge());onInsets(j.to
 /* ---------- tema ---------- */
 function applyTheme(){S.style='neo';const p=NEO[S.neo|0]||NEO[0];S.acc=p[0];const R=document.documentElement.style;R.setProperty('--acc',p[0]);R.setProperty('--acc2',p[1]);
   R.setProperty('--isz',S.isz+'px');R.setProperty('--cols',S.cols);
-  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nohfx',!S.hfx);document.body.classList.toggle('hud',S.skin==='hud');if(S.skin==='hud'){hudColors();const ss=$('#sysS');if(ss)ss.innerHTML=esc(H().sysS)+'<br>'+esc(H().conn)+': '+(navigator.onLine?'ONLINE':'OFFLINE')}document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
+  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nohfx',!S.hfx);if(typeof ecoCheck==='function')setTimeout(ecoCheck,0);document.body.classList.toggle('hud',S.skin==='hud');if(S.skin==='hud'){hudColors();const ss=$('#sysS');if(ss)ss.innerHTML=esc(H().sysS)+'<br>'+esc(H().conn)+': '+(navigator.onLine?'ONLINE':'OFFLINE')}document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
 
 /* ---------- fondo ---------- */
 const WDB={db:null,open(){return new Promise((res,rej)=>{const r=indexedDB.open('auraWall',1);r.onupgradeneeded=()=>r.result.createObjectStore('w');r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error)})},
@@ -350,6 +350,20 @@ async function wallToSystem(){if(!has('setWallpaper'))return;toast('…');let ur
   Android.setWallpaper(url,3)}
 window.onWallpaperSet=ok=>toast(ok?T().wallOk:'Error');
 
+/* ---------- ahorro de energía ----------
+   reposo: sin tocar la pantalla unos segundos se pausan las animaciones decorativas (vuelven al tocar);
+   ahorro: batería baja o ahorro de Android -> menos efectos, 60 Hz, sin giroscopio y consultas más espaciadas */
+const ECO={idle:false,eco:false,t:0};
+function ecoSleep(){if(document.body.classList.contains('jvOpen')||DRAG.on||document.body.classList.contains('editing')){ECO.t=setTimeout(ecoSleep,4000);return}
+  ECO.idle=true;document.body.classList.add('idle');tiltSetup();if(has('setRefresh')&&!ECO.eco&&!S.hz60)Android.setRefresh(60)}
+function ecoWake(){clearTimeout(ECO.t);if(ECO.idle){ECO.idle=false;document.body.classList.remove('idle');tiltSetup();if(has('setRefresh')&&!ECO.eco&&!S.hz60)Android.setRefresh(0);if(typeof hudTick==='function')hudTick()}
+  if(S.saver!==false)ECO.t=setTimeout(ecoSleep,7000)}
+['pointerdown','touchstart','keydown','wheel'].forEach(v=>document.addEventListener(v,ecoWake,{passive:true,capture:true}));
+function ecoCheck(){let ps=false;try{ps=has('powerSave')&&Android.powerSave()}catch(e){}const low=DI.bat!=null&&DI.bat<=20&&!DI.chg;const on=S.saver!==false&&(ps||low);
+  if(on!==ECO.eco){ECO.eco=on;document.body.classList.toggle('eco',on);if(on)toast(S.lang==='en'?'Battery saver: lighter effects':'Ahorro de batería: efectos reducidos')}
+  if(has('setRefresh'))Android.setRefresh(on||S.hz60?60:(ECO.idle&&S.saver!==false?60:0));tiltSetup()}
+window.onPowerSave=()=>ecoCheck();
+
 /* ---------- inclinación (giroscopio) ---------- */
 let tiltOn=false,tt={x:0,y:0},tc={x:0,y:0},base=null,raf=0;
 function onOri(e){if(e.beta==null)return;if(!base)base={b:e.beta,g:e.gamma};let gx=(e.gamma-base.g),by=(e.beta-base.b);
@@ -361,7 +375,7 @@ function tiltFrame(n){raf=0;if(n&&n-tiltLast<45){raf=requestAnimationFrame(tiltF
   const hud=S.skin==='hud';TILT_EL().forEach((el,i)=>{if(hud&&i>0)return;const R=el.style;R.setProperty('--tx',(tc.x*10).toFixed(2)+'px');R.setProperty('--ty',(tc.y*10).toFixed(2)+'px');R.setProperty('--nx',tc.x.toFixed(3));R.setProperty('--ny',tc.y.toFixed(3))});
   if(!hud)$('#pager').style.transform=`translate3d(${(tc.x*4).toFixed(2)}px,${(tc.y*4).toFixed(2)}px,0)`;
   if(Math.abs(tt.x-tc.x)>.002||Math.abs(tt.y-tc.y)>.002)raf=requestAnimationFrame(tiltFrame)}
-function tiltSetup(){const want=!!S.tilt&&!document.hidden;if(want&&!tiltOn){window.addEventListener('deviceorientation',onOri);tiltOn=true;base=null}
+function tiltSetup(){const want=!!S.tilt&&!document.hidden&&!ECO.idle&&!ECO.eco&&S.skin!=='hud';if(want&&!tiltOn){window.addEventListener('deviceorientation',onOri);tiltOn=true;base=null}
   else if(!want&&tiltOn){window.removeEventListener('deviceorientation',onOri);tiltOn=false;tt={x:0,y:0};if(!raf)raf=requestAnimationFrame(tiltFrame)}}
 document.addEventListener('visibilitychange',()=>{tiltSetup();if(typeof hudTick==='function')hudTick();if(!document.hidden){tick();refreshLive()}});
 
@@ -436,7 +450,7 @@ function renderHome(anim){const pg=$('#pager');let h='';const hud=HUDON();VP().f
 function animIn(){const p=$(`.page[data-pi="${S.page|0}"]`);if(!p)return;let k=0;p.querySelectorAll('.wg,.ai').forEach(el=>el.style.setProperty('--k',k++));p.classList.remove('in');void p.offsetWidth;p.classList.add('in');clearTimeout(animIn._t);animIn._t=setTimeout(()=>p.classList.remove('in'),1200)}
 function renderDots(){const n=pagesCount();$('#dots').innerHTML=(S.feedOn?'<i class="fd"></i>':'')+Array.from({length:n},(_,i)=>`<i class="${i===(S.page|0)?'on':''}"></i>`).join('')}
 function layoutPages(pos){POS=pos;const W=$('#pager').clientWidth||innerWidth;$$('.page').forEach(el=>{const i=+el.dataset.pi,d=i-pos,a=Math.abs(d);let tr='';
-    if(a>=.999){el.style.visibility='hidden';el.style.pointerEvents='none';return}el.style.pointerEvents=a<.5?'':'none';el.style.visibility='';
+    el.classList.toggle('off',a>=.999);if(a>=.999){el.style.visibility='hidden';el.style.pointerEvents='none';return}el.style.pointerEvents=a<.5?'':'none';el.style.visibility='';
     if(S.trans==='holo'){tr=`translateX(${d*W*.62}px) translateZ(${-a*260}px) rotateY(${d*-48}deg)`;el.style.transformOrigin='50% 50%';el.style.opacity=Math.max(0,1-a*1.15)}
     else if(S.trans==='cube'){tr=`translateX(${d*W}px) perspective(${W*2.2}px) rotateY(${d*-62}deg)`;el.style.transformOrigin=d<0?'100% 50%':'0% 50%';el.style.opacity=1-a*.35}
     else if(S.trans==='depth'){if(d<0){tr=`translateX(${d*W}px)`;el.style.opacity=1}else{tr=`translateX(${d*W*.25}px) scale(${1-d*.18})`;el.style.opacity=Math.max(0,1-d)}el.style.transformOrigin='50% 50%'}
@@ -605,7 +619,7 @@ function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${e
   <div class="grp"><div class="row"><span>${esc(t.skin)}</span><div class="seg">${[['hud','Hacker HUD'],['holo','Holo']].map(([v,l])=>`<button data-sk="${v}" class="${S.skin===v?'on':''}">${l}</button>`).join('')}</div></div>
   ${S.skin==='hud'?`<div class="row"><span>${esc(t.hudc)}</span><div class="pal" style="padding:0">${Object.keys(HUDC).map(k=>`<button data-hc="${k}" class="${S.hudc===k?'on':''}" style="--c:${HUDC[k][0]};--cr:${HUDC[k][0]};width:26px;height:26px"></button>`).join('')}</div></div>${sw('boot',t.bootA,t.bootS)}`:''}</div>
   <div class="grp" style="margin-top:12px"><div class="row wrap"><span>${esc(t.trans)}</span><div class="seg">${[['holo','Holo'],['slide',t.slide],['depth',t.depth],['cube',t.cube]].map(([v,l])=>`<button data-tr="${v}" class="${S.trans===v?'on':''}">${esc(l)}</button>`).join('')}</div></div>
-  ${sw('hfx',t.hfx,t.hfxS)}${sw('labels',t.labels)}${sw('liquid',t.liquid)}${sw('glow',t.glow)}${sw('tilt',t.tilt,t.tiltS)}</div>
+  ${sw('hfx',t.hfx,t.hfxS)}${sw('saver',t.saver,t.saverS)}${sw('hz60',t.hz60,t.hz60S)}${sw('labels',t.labels)}${sw('liquid',t.liquid)}${sw('glow',t.glow)}${sw('tilt',t.tilt,t.tiltS)}</div>
   <h4>${esc(t.wall)}</h4><div class="walls" id="walls">${WALLS.map(([k,n])=>`<button data-w="${k}" class="${S.wall===k?'on':''}"><span>${esc(n)}</span></button>`).join('')}<button data-w="photo" class="${S.wall==='photo'?'on':''}" style="display:grid;place-items:center">${ic('image')}<span>${esc(t.myPhoto)}</span></button></div>
   ${has('setWallpaper')?`<button class="btn alt" id="wSys" style="width:100%;margin-top:10px">${esc(t.applySys)}</button>`:''}
   <h4>${esc(t.accent)}</h4><div class="pal">${NEO.map((c,i)=>`<button data-n="${i}" class="${i===(S.neo|0)?'on':''}" style="--c:linear-gradient(135deg,${c[0]},${c[1]});--cr:${c[0]}"></button>`).join('')}</div>
@@ -616,7 +630,7 @@ function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${e
   const I2=$('#sheetIn');
   I2.querySelectorAll('[data-sk]').forEach(b=>b.onclick=async()=>{S.skin=b.dataset.sk;if(S.skin==='hud'&&S.wall!=='photo')S.wall='cyber';else if(S.skin==='holo'&&S.wall==='cyber')S.wall='holo';S.page=0;save();applyTheme();await applyWall();renderHome(true);HK='';hudBottom();homeSettings();if(S.skin==='hud')hudBoot(true)});
   I2.querySelectorAll('[data-hc]').forEach(b=>b.onclick=()=>{S.hudc=b.dataset.hc;save();applyTheme();hudRe();homeSettings()});
-  I2.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k,pth=b.dataset.path;if(pth)S[pth][k]=!S[pth][k];else S[k]=!S[k];save();hap('tick');b.classList.toggle('on');applyTheme();if(pth)renderHome()});
+  I2.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k,pth=b.dataset.path;if(pth)S[pth][k]=!S[pth][k];else S[k]=!S[k];save();hap('tick');if(k==='saver'){ECO.idle=false;document.body.classList.remove('idle');ecoWake()}b.classList.toggle('on');applyTheme();if(pth)renderHome()});
   I2.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{S.trans=b.dataset.tr;save();I2.querySelectorAll('[data-tr]').forEach(x=>x.classList.toggle('on',x===b));const n=pagesCount();if(n>1){const p=S.page|0;goPage(p===0?1:0);setTimeout(()=>goPage(p),600)}});
   I2.querySelectorAll('[data-is]').forEach(b=>b.onclick=()=>{S.isz=+b.dataset.is;save();applyTheme();homeSettings()});
   I2.querySelectorAll('[data-co]').forEach(b=>b.onclick=()=>{S.cols=+b.dataset.co;save();applyTheme();homeSettings()});
@@ -644,7 +658,7 @@ function moreSettings(){const t=T();
   if($('#hmB'))$('#hmB').onclick=()=>Android.setDefaultLauncher();if($('#gsB'))$('#gsB').onclick=gestureSheet;if($('#maB'))$('#maB').onclick=()=>Android.requestMediaAccess();$('#jvS').onclick=jarvisSettings}
 
 /* ---------- clima ---------- */
-async function loadWx(force){if(!S.wxLoc){refreshWidgets();return}if(!force&&S.wx&&S.wx.u===S.unit&&S.wx.wind!=null&&Date.now()-S.wx.t<20*60e3){refreshWidgets();return}
+async function loadWx(force){if(!S.wxLoc){refreshWidgets();return}if(!force&&S.wx&&S.wx.u===S.unit&&S.wx.wind!=null&&Date.now()-S.wx.t<(ECO.eco?60:30)*60e3){refreshWidgets();return}
   try{const {lat,lon}=S.wxLoc;const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,is_day,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&forecast_days=1&timezone=auto${S.unit==='F'?'&temperature_unit=fahrenheit':''}`);
     const j=await r.json();S.wx={t:Date.now(),u:S.unit,temp:Math.round(j.current.temperature_2m),code:j.current.weather_code,wind:Math.round(j.current.wind_speed_10m),max:Math.round(j.daily.temperature_2m_max[0]),min:Math.round(j.daily.temperature_2m_min[0]),rain:j.daily.precipitation_probability_max[0]};save()}catch(e){}
   refreshWidgets()}
@@ -708,10 +722,10 @@ window.onAndroidBack=()=>{if(document.body.classList.contains('sheetOpen'))close
   else if(document.body.classList.contains('drawerOpen'))closeDrawer();else if(document.body.classList.contains('editing'))endEdit(true);else if((S.page|0)!==0)goPage(0)};
 window.onAndroidHome=()=>{if(HUDON()&&!document.body.classList.contains('drawerOpen')&&!JV.on&&!document.body.classList.contains('sheetOpen')&&!OPENF&&!document.body.classList.contains('feedOpen')&&!document.body.classList.contains('editing')&&(VP()[S.page|0]||{}).k!=='main'){hudGo('main');return}if(JV.on){jvClose();return}if(document.body.classList.contains('sheetOpen'))closeSheet();closeCtx();if(OPENF)closeFolder();if(document.body.classList.contains('feedOpen'))closeFeed();
   if(document.body.classList.contains('drawerOpen')){closeDrawer();return}if(document.body.classList.contains('editing')){endEdit(true);return}if((S.page|0)!==0)goPage(0);else animIn()};
-window.onAndroidResume=()=>{sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
+window.onAndroidResume=()=>{ecoWake();ecoCheck();sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
 window.addEventListener('resize',()=>layoutPages(S.page|0));
 if(!S.pages||!S.dock)defaultLayout();cleanLayout();
-applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();(window.requestIdleCallback||setTimeout)(()=>{try{renderDrawer()}catch(e){}},{timeout:1500});if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
+applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();ecoWake();setTimeout(ecoCheck,1500);(window.requestIdleCallback||setTimeout)(()=>{try{renderDrawer()}catch(e){}},{timeout:1500});if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
 if(NATIVE){nativeDev();setInterval(()=>{if(!document.hidden&&(S.page|0)===1){nativeDev();refreshWidgets()}},30000)}
 pollMedia();refreshNEV(true);if(S.wxLoc)loadWx(false);else setTimeout(()=>geoLocate(true),1500);
 if(NATIVE&&has('gestureStatus')&&!S.gAsked){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}

@@ -17,7 +17,7 @@ const HT={es:{cov:'COBERTURA GLOBAL',radar:'SISTEMA RADAR',power:'ENERGÍA',diag
     upd:'ACTUALIZADO',total:'TOTAL NOTICIAS',back:'ATRÁS',next:'SIGUIENTE',news:'NOTICIAS',noNews:'Toca NOTICIAS para cargar los titulares.',player:'REPRODUCTOR',vol:'VOLUMEN',nothing:'SIN REPRODUCCIÓN',
     boot:'CARGANDO',done:'COMPLETO',granted:'ACCESO CONCEDIDO',hum:'Viento',rain:'Lluvia',lon:'Longitud',lat:'Latitud',stark:'STARK INDUSTRIES',
     settings:'SETTINGS',desc:'DESCRIPCIÓN',descS:'El color de las luces del sistema. Toca ELEMENTS o el núcleo para cambiarlo.',walls:'FONDOS',wallsS:'Fondos integrados: toca uno para aplicarlo o abre la galería protegida para usar tu foto.',
-    gallery:'GALERÍA PROTEGIDA',effects:'EFECTOS',status:'ESTADO',shadow:'LUZ Y SOMBRA',bootA:'ARRANQUE',perms:'PERMISOS',more:'MÁS AJUSTES',missed:'PERDIDAS',sms:'SMS',net:'INTERNET',
+    gallery:'GALERÍA PROTEGIDA',effects:'EFECTOS',status:'ESTADO',shadow:'LUZ Y SOMBRA',bootA:'ARRANQUE',saver:'AHORRO',perms:'PERMISOS',more:'MÁS AJUSTES',missed:'PERDIDAS',sms:'SMS',net:'INTERNET',
     hour:'hora',min:'min',sec:'seg',noAcc:'sin acceso',permT:'Centro de permisos',permS:'Concede los permisos para que todo el tema funcione con datos reales.',grantAll:'Conceder todos',
     pLoc:'Ubicación',pLocS:'Clima, mapa con radar y nombre del Wi-Fi',pCal:'Calendario',pCalS:'Eventos en el calendario y en J.A.R.V.I.S.',pMic:'Micrófono',pMicS:'Hablar con J.A.R.V.I.S.',pCon:'Contactos',pConS:'Llamar y escribir por voz',
     pPh:'Teléfono',pPhS:'J.A.R.V.I.S. puede llamar',pLog:'Registro de llamadas',pLogS:'Contador de llamadas perdidas',pSms:'SMS',pSmsS:'Contador de mensajes sin leer',pNot:'Acceso a notificaciones',pNotS:'Contador de notificaciones y música',
@@ -30,7 +30,7 @@ const HT={es:{cov:'COBERTURA GLOBAL',radar:'SISTEMA RADAR',power:'ENERGÍA',diag
     upd:'UPDATED',total:'TOTAL NEWS',back:'BACK',next:'NEXT',news:'NEWS',noNews:'Touch NEWS to load headlines.',player:'PLAYER',vol:'VOLUME',nothing:'NOTHING PLAYING',
     boot:'LOADING',done:'COMPLETE',granted:'ACCESS GRANTED',hum:'Wind',rain:'Rain',lon:'Longitude',lat:'Latitude',stark:'STARK INDUSTRIES',
     settings:'SETTINGS',desc:'DESCRIPTION',descS:'The color of the system lights. Touch ELEMENTS or the core to change it.',walls:'WALLPAPERS',wallsS:'Built-in wallpapers: touch one to apply it or open the protected gallery to use your photo.',
-    gallery:'PROTECTED GALLERY',effects:'EFFECTS',status:'STATUS',shadow:'LIGHT SHADOW',bootA:'BOOT',perms:'PERMISSIONS',more:'MORE SETTINGS',missed:'MISSED CALLS',sms:'SMS',net:'INTERNET',
+    gallery:'PROTECTED GALLERY',effects:'EFFECTS',status:'STATUS',shadow:'LIGHT SHADOW',bootA:'BOOT',saver:'SAVER',perms:'PERMISSIONS',more:'MORE SETTINGS',missed:'MISSED CALLS',sms:'SMS',net:'INTERNET',
     hour:'hour',min:'min',sec:'sec',noAcc:'no access',permT:'Permission center',permS:'Grant permissions so the whole theme works with real data.',grantAll:'Grant all',
     pLoc:'Location',pLocS:'Weather, radar map and Wi-Fi name',pCal:'Calendar',pCalS:'Calendar events and J.A.R.V.I.S.',pMic:'Microphone',pMicS:'Talk to J.A.R.V.I.S.',pCon:'Contacts',pConS:'Call and text by voice',
     pPh:'Phone',pPhS:'J.A.R.V.I.S. can call',pLog:'Call log',pLogS:'Missed calls counter',pSms:'SMS',pSmsS:'Unread messages counter',pNot:'Notification access',pNotS:'Notification counter and music',
@@ -129,6 +129,7 @@ function hSet(){const h=H(),c=HUDC[S.hudc]||HUDC.matrix;
     <div class="wrow2"><button class="gal" data-s="gal"><b>${h.gallery}</b></button>${HWALLS.map(k=>`<button class="wt${S.wall===k?' on':''}" data-s="wall" data-k="${k}"></button>`).join('')}</div>
     <b class="sh">${h.effects}</b>
     <div class="tgs"><button class="tg${S.hfx!==false?' on':''}" data-s="hfx"><span>${h.status}</span><i></i></button><button class="tg${S.shadow!==false?' on':''}" data-s="shadow"><span>${h.shadow}</span><i></i></button><button class="tg${S.boot!==false?' on':''}" data-s="boot"><span>${h.bootA}</span><i></i></button></div>
+    <div class="tgs"><button class="tg${S.saver!==false?' on':''}" data-s="saver"><span>${h.saver}</span><i></i></button><button class="tg${S.hz60?' on':''}" data-s="hz60"><span>60 HZ</span><i></i></button></div>
     <div class="sbtns"><button class="pb sm" data-s="perm"><b>${h.perms}</b><u></u></button><button class="pb sm" data-s="more"><b>${h.more}</b><u></u></button></div>
    </div></div>`}
 
@@ -173,13 +174,13 @@ function hudNews(){const n=$('#hNews');if(n){n.innerHTML=hNewsIn();n._fw=0;drawF
 function hudCenterDrum(){const d=$('#hDrum');if(!d)return;const td=d.querySelector('.td');if(td)d.scrollTop=td.offsetTop-d.clientHeight/2+td.offsetHeight/2}
 function hudOnPage(i){if(!HUDON())return;const k=(VP()[i]||{}).k||'main';if(k!==HK){S.page=i;hudBottom();if(k==='media')hudVol();if(k==='set')hudWallThumbs()}}
 let HUDT=0,HUDN=0;function hudTick(){clearTimeout(HUDT);if(!HUDON()||document.hidden)return;if((VP()[S.page|0]||{}).k==='main'){sampleCPU();if(NATIVE)nativeDev();hudUpdate()}
-  if(Date.now()-HUDN>20000){HUDN=Date.now();sampleComm();hudCard()}HUDT=setTimeout(hudTick,4000);hudClock()}
+  if(Date.now()-HUDN>(ECO.eco?180000:60000)){HUDN=Date.now();sampleComm();hudCard();ecoCheck()}HUDT=setTimeout(hudTick,ECO.idle||ECO.eco?20000:5000);hudClock()}
 function hudFit(){if(!HUDON())return;$$('#pager .page').forEach(p=>{p.style.zoom='';const need=p.scrollHeight,have=p.clientHeight;if(need>have+2)p.style.zoom=Math.max(.66,have/need).toFixed(3)})}
 window.addEventListener('resize',()=>setTimeout(hudFit,50));
 
 /* navegación con carga (como en el tema): marco vacío -> barra de carga + terminal -> contenido */
 const LOGL=['[ OK ] Started Journal Service.','[ OK ] Reached target Paths.','Mounting POSIX Message Queue...','[ OK ] Listening on udev Kernel Socket.','Starting LVM2 metadata daemon...','[ OK ] Mounted Huge Pages File System.','dev-disk-by-uuid '+Math.random().toString(16).slice(2,12),'Check sum ........ OK','Secure connection is established','All files are protected!!'];
-function hudGo(k){const i=vIdx(k);if(i<0)return;$$('.page.ld').forEach(x=>{x.classList.remove('ld');const o=x.querySelector('.ldov');if(o)o.remove()});hap('tick');const anim=S.hfx!==false;goPage(i,false);hudOnPage(i);if(!anim){animIn();return}
+function hudGo(k){const i=vIdx(k);if(i<0)return;ecoWake();$$('.page.ld').forEach(x=>{x.classList.remove('ld');const o=x.querySelector('.ldov');if(o)o.remove()});hap('tick');const anim=S.hfx!==false&&!ECO.eco;goPage(i,false);hudOnPage(i);if(!anim){animIn();return}
   const p=$(`.page[data-pi="${i}"]`);if(!p)return;p.classList.add('ld');let ov=p.querySelector('.ldov');if(ov)ov.remove();ov=document.createElement('div');ov.className='ldov';
   ov.innerHTML=`<div class="hz"><i></i><u class="fill"></u><i></i></div><b class="bst">${H().boot}</b><pre></pre>`;p.appendChild(ov);const pre=ov.querySelector('pre');let n=0;
   const st=()=>{if(!ov.isConnected)return;if(n<4){pre.textContent+=LOGL[(n+Math.floor(Math.random()*4))%LOGL.length]+'\n';n++;setTimeout(st,45)}else{ov.querySelector('.bst').textContent=H().done;setTimeout(()=>{ov.remove();p.classList.remove('ld');animIn();frames(p);hudFit();if(k==='class')hudCenterDrum()},90)}};setTimeout(st,40)}
@@ -198,7 +199,8 @@ async function hudSet(b){const a=b.dataset.s,K=Object.keys(HUDC);
   if(a==='col'||a==='colp'){const i=K.indexOf(S.hudc);S.hudc=K[(i+(a==='colp'?K.length-1:1)+K.length)%K.length];save();applyTheme();hudRe()}
   else if(a==='wall'){S.wall=b.dataset.k;save();await applyWall();$$('.wt').forEach(x=>x.classList.toggle('on',x===b))}
   else if(a==='gal'){$('#wallIn').click()}
-  else if(a==='hfx'||a==='shadow'||a==='boot'){S[a]=!(S[a]!==false);save();applyTheme();b.classList.toggle('on',S[a]!==false);if(a==='boot'&&S.boot)hudBoot(true)}
+  else if(a==='hz60'){S.hz60=!S.hz60;save();b.classList.toggle('on',S.hz60);ecoCheck()}
+  else if(a==='hfx'||a==='shadow'||a==='boot'||a==='saver'){S[a]=!(S[a]!==false);if(a==='saver'){ECO.idle=false;document.body.classList.remove('idle');ecoWake()}save();applyTheme();b.classList.toggle('on',S[a]!==false);if(a==='boot'&&S.boot)hudBoot(true)}
   else if(a==='perm')permSheet();else if(a==='more')homeSettings()}
 function hudRe(){const p=S.page|0;renderHome();goPage(p,false);HK='';hudOnPage(p)}
 function hudWallThumbs(){$$('.wt').forEach(b=>{if(b.style.backgroundImage)return;requestAnimationFrame(()=>{b.style.backgroundImage=`url(${genWall(b.dataset.k,72,128).toDataURL('image/jpeg',.75)})`})})}

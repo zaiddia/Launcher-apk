@@ -53,6 +53,14 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
+### Aura v2.0 — ahorro de batería (sin perder funciones)
+- **Reposo inteligente**: a los 7 s sin tocar la pantalla se pausan las animaciones decorativas y la pantalla baja a 60 Hz; todo vuelve al tocar. En reposo el procesador pasa de ~130 ms/s a 0–5 ms/s.
+- Lo que queda tapado (cajón, J.A.R.V.I.S., noticias, páginas fuera de vista) deja de animarse.
+- **Modo ahorro automático** con batería ≤ 20 % o con el ahorro de energía de Android: sin partículas, rejilla ni desenfoques, 60 Hz y consultas espaciadas.
+- Consultas al sistema cada 5 s en uso / 20 s en reposo (antes 4 s siempre); contadores cada 60 s; clima cada 30 min; sin giroscopio en el estilo HUD.
+- Sin avisos a la interfaz mientras el launcher no está visible.
+- Ajustes: «Ahorro de batería» y «Pantalla a 60 Hz» (SETTINGS → EFECTOS o Más ajustes).
+
 ### Aura v1.9 — optimización de velocidad
 - Se eliminó la causa de los tirones: una animación que recalculaba toda la pantalla en cada cuadro. En reposo pasa de ~15 a 60 fps.
 - Cambio de sección (ACCESS / LOGIN / SETTINGS) en ~0,45 s en vez de ~1,5 s; arranque más corto.

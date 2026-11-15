@@ -344,3 +344,16 @@ body.hud #dlist .ai .ic2{clip-path:none!important;border-radius:8px!important;bo
 body.hud #dlist .ai .ic2::after{opacity:1!important}
 body.hud #dlist .ai .ic2 img{box-shadow:none!important}
 #dlist .ai .ic2 img{box-shadow:none}
+
+/* ===== ahorro de energía ===== */
+/* reposo y capas tapadas: las animaciones decorativas se detienen (se reanudan solas) */
+body.idle:not(.jvOpen) *,body.idle:not(.jvOpen) *::before,body.idle:not(.jvOpen) *::after,
+body.eco:not(.jvOpen) *,body.eco:not(.jvOpen) *::before,body.eco:not(.jvOpen) *::after,
+.page.off *,.page.off *::before,.page.off *::after,
+body.drawerOpen #home *,body.drawerOpen #home *::before,body.drawerOpen #home *::after,
+body.feedOpen #home *,body.feedOpen #home *::before,body.feedOpen #home *::after,
+body.jvOpen #home *,body.jvOpen #home *::before,body.jvOpen #home *::after,
+body.drawerOpen #parts *,body.drawerOpen #floor *::before,body.jvOpen #parts *,body.jvOpen #floor *::before,body.feedOpen #parts *,body.feedOpen #floor *::before{animation-play-state:paused!important}
+#jv:not(.on) *,#jv:not(.on) *::before,#jv:not(.on) *::after,#feed:not(.in) .ptr *{animation-play-state:paused!important}
+body.eco #parts,body.eco #floor,body.eco .lightfx,body.eco .wclock .scan{display:none}
+body.eco .glass,body.eco .holo,body.eco #dock{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(140deg,rgba(60,50,110,.6),rgba(25,20,55,.55))}
