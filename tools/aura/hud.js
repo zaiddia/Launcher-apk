@@ -179,10 +179,10 @@ window.addEventListener('resize',()=>setTimeout(hudFit,50));
 
 /* navegación con carga (como en el tema): marco vacío -> barra de carga + terminal -> contenido */
 const LOGL=['[ OK ] Started Journal Service.','[ OK ] Reached target Paths.','Mounting POSIX Message Queue...','[ OK ] Listening on udev Kernel Socket.','Starting LVM2 metadata daemon...','[ OK ] Mounted Huge Pages File System.','dev-disk-by-uuid '+Math.random().toString(16).slice(2,12),'Check sum ........ OK','Secure connection is established','All files are protected!!'];
-function hudGo(k){const i=vIdx(k);if(i<0)return;hap('tick');const anim=S.hfx!==false;goPage(i,false);hudOnPage(i);if(!anim){animIn();return}
+function hudGo(k){const i=vIdx(k);if(i<0)return;$$('.page.ld').forEach(x=>{x.classList.remove('ld');const o=x.querySelector('.ldov');if(o)o.remove()});hap('tick');const anim=S.hfx!==false;goPage(i,false);hudOnPage(i);if(!anim){animIn();return}
   const p=$(`.page[data-pi="${i}"]`);if(!p)return;p.classList.add('ld');let ov=p.querySelector('.ldov');if(ov)ov.remove();ov=document.createElement('div');ov.className='ldov';
   ov.innerHTML=`<div class="hz"><i></i><u class="fill"></u><i></i></div><b class="bst">${H().boot}</b><pre></pre>`;p.appendChild(ov);const pre=ov.querySelector('pre');let n=0;
-  const st=()=>{if(!ov.isConnected)return;if(n<7){pre.textContent+=LOGL[(n+Math.floor(Math.random()*4))%LOGL.length]+'\n';n++;setTimeout(st,65)}else{ov.querySelector('.bst').textContent=H().done;setTimeout(()=>{ov.remove();p.classList.remove('ld');animIn();frames(p);hudFit();if(k==='class')hudCenterDrum()},220)}};setTimeout(st,120)}
+  const st=()=>{if(!ov.isConnected)return;if(n<4){pre.textContent+=LOGL[(n+Math.floor(Math.random()*4))%LOGL.length]+'\n';n++;setTimeout(st,45)}else{ov.querySelector('.bst').textContent=H().done;setTimeout(()=>{ov.remove();p.classList.remove('ld');animIn();frames(p);hudFit();if(k==='class')hudCenterDrum()},90)}};setTimeout(st,40)}
 $('#hudBot').addEventListener('click',e=>{const m=e.target.closest('[data-m]');if(m){hap();cmd(m.dataset.m);return}const vb=e.target.closest('[data-v]');if(vb){hap('tick');try{has('volume')&&Android.volume(+vb.dataset.v)}catch(x){}setTimeout(hudVol,150);return}
   const b=e.target.closest('[data-w]');if(!b)return;const w=b.dataset.w;hap();
   if(w==='acc')hudGo(HK==='media'?'main':'media');else if(w==='log')hudGo(HK==='class'?'main':'class');else if(w==='set')hudGo(HK==='set'?'main':'set');
@@ -223,8 +223,8 @@ const BOOTL=['[ OK ] Started Journal Service.','Mounting POSIX Message Queue Fil
 function hudBoot(force){if(!HUDON()||(S.boot===false&&!force)||$('#boot'))return;const h=H();const el=document.createElement('div');el.id='boot';
   el.innerHTML=`<div class="hf hp bt1" data-f="bot"><div class="hz"><i></i><u class="fill"></u><i></i></div><b class="bst">${h.boot}</b></div><div class="hf hp bt2" data-f="tab side"><span class="haz"></span><pre id="bLog"></pre></div>`;
   document.body.appendChild(el);frames(el);const log=$('#bLog');let i=0;
-  const step=()=>{if(!el.isConnected)return;if(i<BOOTL.length){log.textContent+=BOOTL[i++]+'\n';log.scrollTop=1e9;setTimeout(step,70+Math.random()*60)}
-    else{el.querySelector('.bst').textContent=h.done;el.classList.add('ok');setTimeout(()=>{el.querySelector('.bst').textContent=h.granted},380);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),450)},1000)}};
-  setTimeout(step,350);el.onclick=()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)}}
+  const step=()=>{if(!el.isConnected)return;if(i<BOOTL.length){log.textContent+=BOOTL[i++]+'\n';log.scrollTop=1e9;setTimeout(step,32+Math.random()*28)}
+    else{el.querySelector('.bst').textContent=h.done;el.classList.add('ok');setTimeout(()=>{el.querySelector('.bst').textContent=h.granted},200);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)},520)}};
+  setTimeout(step,120);el.onclick=()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)}}
 function hudFirstRun(){if(!HUDON()||!NATIVE||S.permAsked)return;S.permAsked=true;save();setTimeout(permSheet,3600)}
 const _rfH=renderFeed;renderFeed=function(a){_rfH(a);if(HUDON())hudNews()};

@@ -353,8 +353,12 @@ window.onWallpaperSet=ok=>toast(ok?T().wallOk:'Error');
 let tiltOn=false,tt={x:0,y:0},tc={x:0,y:0},base=null,raf=0;
 function onOri(e){if(e.beta==null)return;if(!base)base={b:e.beta,g:e.gamma};let gx=(e.gamma-base.g),by=(e.beta-base.b);
   base.b+=(e.beta-base.b)*.004;base.g+=(e.gamma-base.g)*.004;tt.x=Math.max(-1,Math.min(1,gx/22));tt.y=Math.max(-1,Math.min(1,by/22));if(!raf)raf=requestAnimationFrame(tiltFrame)}
-function tiltFrame(){raf=0;tc.x+=(tt.x-tc.x)*.12;tc.y+=(tt.y-tc.y)*.12;const R=document.documentElement.style;R.setProperty('--tx',(tc.x*10).toFixed(2)+'px');R.setProperty('--ty',(tc.y*10).toFixed(2)+'px');R.setProperty('--nx',tc.x.toFixed(3));R.setProperty('--ny',tc.y.toFixed(3));
-  $('#pager').style.transform=`translate3d(${(tc.x*4).toFixed(2)}px,${(tc.y*4).toFixed(2)}px,0)`;
+const TILT_EL=()=>TILT_EL.c||(TILT_EL.c=['#wall','#floor'].map(s=>$(s)).filter(Boolean));
+let tiltLast=0;
+function tiltFrame(n){raf=0;if(n&&n-tiltLast<45){raf=requestAnimationFrame(tiltFrame);return}tiltLast=n||performance.now();tc.x+=(tt.x-tc.x)*.3;tc.y+=(tt.y-tc.y)*.3;
+  /* rendimiento: las variables se ponen solo en las capas que las usan (no en la raíz); en HUD solo se mueve el fondo */
+  const hud=S.skin==='hud';TILT_EL().forEach((el,i)=>{if(hud&&i>0)return;const R=el.style;R.setProperty('--tx',(tc.x*10).toFixed(2)+'px');R.setProperty('--ty',(tc.y*10).toFixed(2)+'px');R.setProperty('--nx',tc.x.toFixed(3));R.setProperty('--ny',tc.y.toFixed(3))});
+  if(!hud)$('#pager').style.transform=`translate3d(${(tc.x*4).toFixed(2)}px,${(tc.y*4).toFixed(2)}px,0)`;
   if(Math.abs(tt.x-tc.x)>.002||Math.abs(tt.y-tc.y)>.002)raf=requestAnimationFrame(tiltFrame)}
 function tiltSetup(){const want=!!S.tilt&&!document.hidden;if(want&&!tiltOn){window.addEventListener('deviceorientation',onOri);tiltOn=true;base=null}
   else if(!want&&tiltOn){window.removeEventListener('deviceorientation',onOri);tiltOn=false;tt={x:0,y:0};if(!raf)raf=requestAnimationFrame(tiltFrame)}}
@@ -439,8 +443,8 @@ function layoutPages(pos){POS=pos;const W=$('#pager').clientWidth||innerWidth;$$
     el.style.transform=tr;el.style.zIndex=d<=0?2:1});
   $$('#dots i:not(.fd)').forEach((d,i)=>d.classList.toggle('on',i===Math.round(pos)));if(typeof hudOnPage==='function'&&Number.isInteger(pos))hudOnPage(pos)}
 function goPage(i,anim=true){i=Math.max(0,Math.min(pagesCount()-1,i));const from=POS;S.page=i;save();
-  if(!anim){layoutPages(i);return}const t0=performance.now(),dur=380;cancelAnimationFrame(goPage._r);
-  const st=n=>{const k=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-k,3);layoutPages(from+(i-from)*e);if(k<1)goPage._r=requestAnimationFrame(st);else{layoutPages(i);if(Math.round(from)!==i)animIn()}};goPage._r=requestAnimationFrame(st)}
+  if(!anim){layoutPages(i);document.body.classList.remove('pmove');return}document.body.classList.add('pmove');const t0=performance.now(),dur=380;cancelAnimationFrame(goPage._r);
+  const st=n=>{const k=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-k,3);layoutPages(from+(i-from)*e);if(k<1)goPage._r=requestAnimationFrame(st);else{layoutPages(i);document.body.classList.remove('pmove');if(Math.round(from)!==i)animIn()}};goPage._r=requestAnimationFrame(st)}
 
 /* ---------- gestos en inicio: páginas, cajón, noticias, notificaciones ---------- */
 (()=>{const hm=$('#home');let sx=0,sy=0,st=0,lock=0,dx=0,dy=0,W=1,feed=false,drw=false,startEl=null;
@@ -450,6 +454,7 @@ function goPage(i,anim=true){i=Math.max(0,Math.min(pagesCount()-1,i));const from
     if(!lock){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.2){lock=1;feed=(S.page|0)===0&&dx>0&&S.feedOn&&!document.body.classList.contains('editing');if(feed){$('#feed').classList.add('drag');openFeedPrep()}}
       else if(Math.abs(dy)>10){lock=2;drw=dy<0&&!document.body.classList.contains('editing');if(drw){openDrawerPrep();$('#drawer').classList.add('drag')}}else return}
     if(e.cancelable)e.preventDefault();
+    if(lock===1&&!feed)document.body.classList.add('pmove');
     if(lock===1){if(feed){$('#feed').style.transform=`translateX(${Math.min(0,-W+dx)}px)`;$('#fshade').style.opacity=Math.min(.35,dx/W*.35)}else{let p=(S.page|0)-dx/W;const n=pagesCount();if(p<0)p=p*.25;if(p>n-1)p=n-1+(p-n+1)*.25;layoutPages(p)}}
     else if(lock===2&&drw){const y=Math.max(0,innerHeight+dy);$('#drawer').style.transform=`translateY(${y}px)`;document.body.classList.toggle('drawerOpen',dy<-innerHeight*.15)}},{passive:false});
   const end=()=>{const v=Math.max(Math.abs(dx),Math.abs(dy))/Math.max(1,Date.now()-st);
@@ -705,7 +710,7 @@ window.onAndroidHome=()=>{if(HUDON()&&!document.body.classList.contains('drawerO
 window.onAndroidResume=()=>{sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
 window.addEventListener('resize',()=>layoutPages(S.page|0));
 if(!S.pages||!S.dock)defaultLayout();cleanLayout();
-applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
+applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();(window.requestIdleCallback||setTimeout)(()=>{try{renderDrawer()}catch(e){}},{timeout:1500});if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
 if(NATIVE){nativeDev();setInterval(()=>{if(!document.hidden&&(S.page|0)===1){nativeDev();refreshWidgets()}},30000)}
 pollMedia();refreshNEV(true);if(S.wxLoc)loadWx(false);else setTimeout(()=>geoLocate(true),1500);
 if(NATIVE&&has('gestureStatus')&&!S.gAsked){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}

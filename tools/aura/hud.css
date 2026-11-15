@@ -288,7 +288,7 @@ body.noshadow .lightfx{display:none}
 .ldov{position:absolute;left:28px;right:28px;top:30px;z-index:5;text-align:center}
 .ldov .hz{margin:0 0 8px}.ldov .bst{font:500 11px Orbitron;letter-spacing:.38em;color:var(--pk);text-shadow:0 0 8px var(--pk)}
 .ldov pre{text-align:left;margin-top:40px;font:500 9px/1.5 var(--mono);color:color-mix(in srgb,var(--fr) 60%,#fff);text-shadow:0 0 5px var(--fr);white-space:pre-wrap;height:140px;overflow:hidden}
-.hz u.fill{animation:hzRun 1s linear infinite,fillBar .7s ease-out both}
+.hz u.fill{animation:hzRun 1s linear infinite,fillBar .32s ease-out both}
 .page.in .hrow:nth-child(1){animation:holoIn .5s var(--eo) both}
 body.hud .page.in .grid .ai{animation:flipIn .45s var(--sp) both;animation-delay:calc(200ms + var(--k,0) * 45ms)}
 /* noticias: miniaturas */
@@ -324,3 +324,12 @@ body.hud .page.in .grid .ai{animation:flipIn .45s var(--sp) both;animation-delay
 .tg.on i::after{left:18px;background:var(--fr);box-shadow:0 0 8px var(--fr)}
 .sbtns{display:flex;gap:10px}
 .pok{color:var(--fr,#7CFF3A);font-size:18px}
+
+/* rendimiento */
+body.hud.drawerOpen #wall,body.hud.folderOpen #wall,body.hud.editing #wall{filter:brightness(.45)}
+body.hud #wall{transition:filter .25s}
+body.hud .page.in .hrow{animation-duration:.34s}
+body.hud .page.in .grid .ai{animation-duration:.3s;animation-delay:calc(60ms + var(--k,0) * 22ms)}
+body.drawerOpen .dg:nth-of-type(n+5) .ai{animation:none}
+.jvbg{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#boot{transition:opacity .28s,transform .28s}

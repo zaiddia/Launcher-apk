@@ -53,7 +53,12 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
-### Aura v1.9: Hacker HUD de una sola pantalla (nuevo)
+### Aura v1.9 — optimización de velocidad
+- Se eliminó la causa de los tirones: una animación que recalculaba toda la pantalla en cada cuadro. En reposo pasa de ~15 a 60 fps.
+- Cambio de sección (ACCESS / LOGIN / SETTINGS) en ~0,45 s en vez de ~1,5 s; arranque más corto.
+- El cajón se prepara en segundo plano y abre al instante; la inclinación ya no recalcula la pantalla; sin desenfoques animados.
+
+### Aura v1.9: Hacker HUD de una sola pantalla
 - Funciona como el tema original: la **base es fija** (ACCESS / LOGIN, tarjeta del día, reloj hora·min·seg de colores y SYSTEM INFORMATION) y el **panel central cambia** con animación de carga + terminal.
 - **ACCESS** → Media (casete, volumen, noticias con miniaturas) · **LOGIN** → CLASSIFIED (calendario, búsqueda, apps) · cuadro gris → **SETTINGS**. Al estar activo, el botón dice **ONLINE**.
 - **SETTINGS**: núcleo de color + ELEMENTS (Matrix verde/crema, Shadow rojo/lima, Stark, Cyber, Nebula), fondos + galería protegida, efectos (estado, luz y sombra, arranque), permisos y más ajustes.

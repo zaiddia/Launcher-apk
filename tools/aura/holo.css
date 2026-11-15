@@ -2,7 +2,7 @@
 @font-face{font-family:'Orbitron';font-weight:500;font-display:swap;src:url(fonts/orbitron-latin-500-normal.woff2) format('woff2')}
 @font-face{font-family:'Orbitron';font-weight:700;font-display:swap;src:url(fonts/orbitron-latin-700-normal.woff2) format('woff2')}
 @font-face{font-family:'Orbitron';font-weight:900;font-display:swap;src:url(fonts/orbitron-latin-900-normal.woff2) format('woff2')}
-@property --ang{syntax:'<angle>';inherits:true;initial-value:0deg}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
 @keyframes holoSpin{to{--ang:360deg}}
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
@@ -14,9 +14,7 @@
 @keyframes flick{0%,100%{opacity:1}92%{opacity:1}94%{opacity:.55}96%{opacity:1}}
 :root{--h1:#00F0FF;--h2:#FF2BD6;--h3:#7B5CFF;--h4:#B6FF3B;--h5:#FFB86B;--nx:0;--ny:0;
   --iri:conic-gradient(from var(--ang),#00F0FF,#7B5CFF,#FF2BD6,#FFB86B,#B6FF3B,#00F0FF);
-  --hf:Orbitron,"Barlow Condensed",sans-serif;animation:holoSpin 9s linear infinite}
-body.nohfx{--ang:0deg}
-:root:has(body.nohfx){animation:none}
+  --hf:Orbitron,"Barlow Condensed",sans-serif}
 
 /* capas de ambiente */
 #floor{position:fixed;left:-30%;right:-30%;bottom:-6%;height:42%;z-index:1;pointer-events:none;perspective:340px;perspective-origin:50% 0;opacity:.75;
@@ -60,9 +58,9 @@ body.nohfx #parts{display:none}
 .wclock{color:#fff;background:linear-gradient(150deg,rgba(20,14,50,.55),rgba(8,6,24,.35));align-items:center;justify-content:center;overflow:hidden}
 .wclock .rings{position:absolute;inset:14% 10% 30%;opacity:.8;perspective:260px;pointer-events:none}
 .wclock .rings i{position:absolute;inset:8%;border-radius:50%;border:1.6px solid color-mix(in srgb,var(--acc) 75%,transparent);box-shadow:0 0 12px var(--acc),inset 0 0 12px color-mix(in srgb,var(--acc) 50%,transparent);
-  transform:rotateX(72deg) rotateZ(var(--ang))}
-.wclock .rings i:nth-child(2){inset:16%;border-color:color-mix(in srgb,var(--acc2) 80%,transparent);box-shadow:0 0 12px var(--acc2);border-style:dashed;transform:rotateY(70deg) rotateZ(calc(var(--ang) * -2))}
-.wclock .rings i:nth-child(3){inset:24%;border-width:1px;border-color:rgba(255,255,255,.4);box-shadow:none;transform:rotateX(60deg) rotateY(40deg) rotateZ(calc(var(--ang) * 3))}
+  animation:ringA 9s linear infinite}
+.wclock .rings i:nth-child(2){inset:16%;border-color:color-mix(in srgb,var(--acc2) 80%,transparent);box-shadow:0 0 12px var(--acc2);border-style:dashed;animation:ringB 4.5s linear infinite}
+.wclock .rings i:nth-child(3){inset:24%;border-width:1px;border-color:rgba(255,255,255,.4);box-shadow:none;animation:ringC 3s linear infinite}
 .wclock svg{position:absolute;inset:0;width:100%;height:100%}
 .wclock b{font-size:40px;line-height:1;position:relative;animation:flick 7s infinite}
 .wclock small{position:relative;margin-top:10px;text-shadow:0 0 6px rgba(0,0,0,.9)}
@@ -140,7 +138,7 @@ body.drawerOpen #dockpad,body.folderOpen #dockpad{opacity:0}
 .dcnt{font-family:var(--hf);color:color-mix(in srgb,var(--acc) 60%,#fff)}
 .lt{font:900 16px var(--hf);background:var(--iri);-webkit-background-clip:text;background-clip:text;display:flex;align-items:center;gap:10px;width:auto}
 .lt::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 60%,transparent),transparent)}
-body.drawerOpen .dg .ai{animation:flipIn .5s var(--sp) both}
+body.drawerOpen .dg:nth-of-type(-n+4) .ai{animation:flipIn .4s var(--sp) both}
 .azb{border-radius:18px;background:rgba(10,8,30,.6);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-family:var(--hf);box-shadow:inset 0 0 0 1.5px var(--acc),0 0 22px var(--acc)}
 .az{font-family:var(--hf);font-size:8.5px}
 
@@ -155,3 +153,26 @@ body.drawerOpen .dg .ai{animation:flipIn .5s var(--sp) both}
 .page.in .wg{animation:holoIn .7s var(--eo) both;animation-delay:calc(var(--k,0) * 60ms)}
 .page.in .ai{animation:flipIn .55s var(--sp) both;animation-delay:calc(120ms + var(--k,0) * 26ms)}
 #toast{font-family:Barlow;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 50%,transparent),0 0 20px -4px var(--acc)}
+
+/* rendimiento: cada borde iridiscente anima su propio ángulo (nada heredado en la raíz) */
+@keyframes ringA{from{transform:rotateX(72deg) rotateZ(0)}to{transform:rotateX(72deg) rotateZ(360deg)}}
+@keyframes ringB{from{transform:rotateY(70deg) rotateZ(0)}to{transform:rotateY(70deg) rotateZ(-360deg)}}
+@keyframes ringC{from{transform:rotateX(60deg) rotateY(40deg) rotateZ(0)}to{transform:rotateX(60deg) rotateY(40deg) rotateZ(360deg)}}
+.glass::after,.holo::after,.fold::after,#fblob::after,.wmu .art::after,body.sheetOpen #sheet::after,#ctx.on .cm::after,#dots i.on,#srch .orb,.dsr .orb,#editbar #eDone,.wmu .ctl .pp{
+  --iri:conic-gradient(from var(--ang),#00F0FF,#7B5CFF,#FF2BD6,#FFB86B,#B6FF3B,#00F0FF)}
+.glass::after,.holo::after,.fold::after,#fblob::after,.wmu .art::after,body.sheetOpen #sheet::after,#ctx.on .cm::after{animation:holoSpin 9s linear infinite}
+body.nohfx .glass::after,body.nohfx .holo::after,body.nohfx .fold::after,body.nohfx .wmu .art::after,body.hud #sheet::after,body.hud .cm::after{animation:none}
+body.nohfx .wclock .rings i{animation:none}
+
+/* rendimiento (Holo): menos desenfoque, giro iridiscente a 12 fps, rejilla sin filtro */
+.glass,.holo{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#dock{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.glass::after,.holo::after,.fold::after,#fblob::after,.wmu .art::after,body.sheetOpen #sheet::after,#ctx.on .cm::after{animation:holoSpin 9s steps(108) infinite}
+#floor i::before{filter:none}
+.glass::before{will-change:auto}
+body.drawerOpen #wall{filter:brightness(.42)}
+#wall{transition:filter .25s,transform .12s linear}
+#drawer{background:linear-gradient(180deg,rgba(6,4,20,.72),rgba(6,4,20,.9))}
+.wg{transform:rotateX(calc(var(--ly,0) * -12deg)) rotateY(calc(var(--lx,0) * 14deg)) scale(var(--s))}
+.wg:active{transform:rotateX(calc(var(--ly,0) * -12deg)) rotateY(calc(var(--lx,0) * 14deg)) scale(.965)}
+body.pmove .glass,body.pmove .holo,body.pmove #dock{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(140deg,rgba(60,50,110,.6),rgba(25,20,55,.55))}

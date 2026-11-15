@@ -223,7 +223,7 @@ body.sheetOpen #sheet{transform:none;visibility:visible;transition:transform .42
 @font-face{font-family:'Orbitron';font-weight:500;font-display:swap;src:url(fonts/orbitron-latin-500-normal.woff2) format('woff2')}
 @font-face{font-family:'Orbitron';font-weight:700;font-display:swap;src:url(fonts/orbitron-latin-700-normal.woff2) format('woff2')}
 @font-face{font-family:'Orbitron';font-weight:900;font-display:swap;src:url(fonts/orbitron-latin-900-normal.woff2) format('woff2')}
-@property --ang{syntax:'<angle>';inherits:true;initial-value:0deg}
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
 @keyframes holoSpin{to{--ang:360deg}}
 @keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
@@ -235,9 +235,7 @@ body.sheetOpen #sheet{transform:none;visibility:visible;transition:transform .42
 @keyframes flick{0%,100%{opacity:1}92%{opacity:1}94%{opacity:.55}96%{opacity:1}}
 :root{--h1:#00F0FF;--h2:#FF2BD6;--h3:#7B5CFF;--h4:#B6FF3B;--h5:#FFB86B;--nx:0;--ny:0;
   --iri:conic-gradient(from var(--ang),#00F0FF,#7B5CFF,#FF2BD6,#FFB86B,#B6FF3B,#00F0FF);
-  --hf:Orbitron,"Barlow Condensed",sans-serif;animation:holoSpin 9s linear infinite}
-body.nohfx{--ang:0deg}
-:root:has(body.nohfx){animation:none}
+  --hf:Orbitron,"Barlow Condensed",sans-serif}
 
 /* capas de ambiente */
 #floor{position:fixed;left:-30%;right:-30%;bottom:-6%;height:42%;z-index:1;pointer-events:none;perspective:340px;perspective-origin:50% 0;opacity:.75;
@@ -281,9 +279,9 @@ body.nohfx #parts{display:none}
 .wclock{color:#fff;background:linear-gradient(150deg,rgba(20,14,50,.55),rgba(8,6,24,.35));align-items:center;justify-content:center;overflow:hidden}
 .wclock .rings{position:absolute;inset:14% 10% 30%;opacity:.8;perspective:260px;pointer-events:none}
 .wclock .rings i{position:absolute;inset:8%;border-radius:50%;border:1.6px solid color-mix(in srgb,var(--acc) 75%,transparent);box-shadow:0 0 12px var(--acc),inset 0 0 12px color-mix(in srgb,var(--acc) 50%,transparent);
-  transform:rotateX(72deg) rotateZ(var(--ang))}
-.wclock .rings i:nth-child(2){inset:16%;border-color:color-mix(in srgb,var(--acc2) 80%,transparent);box-shadow:0 0 12px var(--acc2);border-style:dashed;transform:rotateY(70deg) rotateZ(calc(var(--ang) * -2))}
-.wclock .rings i:nth-child(3){inset:24%;border-width:1px;border-color:rgba(255,255,255,.4);box-shadow:none;transform:rotateX(60deg) rotateY(40deg) rotateZ(calc(var(--ang) * 3))}
+  animation:ringA 9s linear infinite}
+.wclock .rings i:nth-child(2){inset:16%;border-color:color-mix(in srgb,var(--acc2) 80%,transparent);box-shadow:0 0 12px var(--acc2);border-style:dashed;animation:ringB 4.5s linear infinite}
+.wclock .rings i:nth-child(3){inset:24%;border-width:1px;border-color:rgba(255,255,255,.4);box-shadow:none;animation:ringC 3s linear infinite}
 .wclock svg{position:absolute;inset:0;width:100%;height:100%}
 .wclock b{font-size:40px;line-height:1;position:relative;animation:flick 7s infinite}
 .wclock small{position:relative;margin-top:10px;text-shadow:0 0 6px rgba(0,0,0,.9)}
@@ -361,7 +359,7 @@ body.drawerOpen #dockpad,body.folderOpen #dockpad{opacity:0}
 .dcnt{font-family:var(--hf);color:color-mix(in srgb,var(--acc) 60%,#fff)}
 .lt{font:900 16px var(--hf);background:var(--iri);-webkit-background-clip:text;background-clip:text;display:flex;align-items:center;gap:10px;width:auto}
 .lt::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 60%,transparent),transparent)}
-body.drawerOpen .dg .ai{animation:flipIn .5s var(--sp) both}
+body.drawerOpen .dg:nth-of-type(-n+4) .ai{animation:flipIn .4s var(--sp) both}
 .azb{border-radius:18px;background:rgba(10,8,30,.6);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-family:var(--hf);box-shadow:inset 0 0 0 1.5px var(--acc),0 0 22px var(--acc)}
 .az{font-family:var(--hf);font-size:8.5px}
 
@@ -376,6 +374,29 @@ body.drawerOpen .dg .ai{animation:flipIn .5s var(--sp) both}
 .page.in .wg{animation:holoIn .7s var(--eo) both;animation-delay:calc(var(--k,0) * 60ms)}
 .page.in .ai{animation:flipIn .55s var(--sp) both;animation-delay:calc(120ms + var(--k,0) * 26ms)}
 #toast{font-family:Barlow;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 50%,transparent),0 0 20px -4px var(--acc)}
+
+/* rendimiento: cada borde iridiscente anima su propio ángulo (nada heredado en la raíz) */
+@keyframes ringA{from{transform:rotateX(72deg) rotateZ(0)}to{transform:rotateX(72deg) rotateZ(360deg)}}
+@keyframes ringB{from{transform:rotateY(70deg) rotateZ(0)}to{transform:rotateY(70deg) rotateZ(-360deg)}}
+@keyframes ringC{from{transform:rotateX(60deg) rotateY(40deg) rotateZ(0)}to{transform:rotateX(60deg) rotateY(40deg) rotateZ(360deg)}}
+.glass::after,.holo::after,.fold::after,#fblob::after,.wmu .art::after,body.sheetOpen #sheet::after,#ctx.on .cm::after,#dots i.on,#srch .orb,.dsr .orb,#editbar #eDone,.wmu .ctl .pp{
+  --iri:conic-gradient(from var(--ang),#00F0FF,#7B5CFF,#FF2BD6,#FFB86B,#B6FF3B,#00F0FF)}
+.glass::after,.holo::after,.fold::after,#fblob::after,.wmu .art::after,body.sheetOpen #sheet::after,#ctx.on .cm::after{animation:holoSpin 9s linear infinite}
+body.nohfx .glass::after,body.nohfx .holo::after,body.nohfx .fold::after,body.nohfx .wmu .art::after,body.hud #sheet::after,body.hud .cm::after{animation:none}
+body.nohfx .wclock .rings i{animation:none}
+
+/* rendimiento (Holo): menos desenfoque, giro iridiscente a 12 fps, rejilla sin filtro */
+.glass,.holo{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#dock{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.glass::after,.holo::after,.fold::after,#fblob::after,.wmu .art::after,body.sheetOpen #sheet::after,#ctx.on .cm::after{animation:holoSpin 9s steps(108) infinite}
+#floor i::before{filter:none}
+.glass::before{will-change:auto}
+body.drawerOpen #wall{filter:brightness(.42)}
+#wall{transition:filter .25s,transform .12s linear}
+#drawer{background:linear-gradient(180deg,rgba(6,4,20,.72),rgba(6,4,20,.9))}
+.wg{transform:rotateX(calc(var(--ly,0) * -12deg)) rotateY(calc(var(--lx,0) * 14deg)) scale(var(--s))}
+.wg:active{transform:rotateX(calc(var(--ly,0) * -12deg)) rotateY(calc(var(--lx,0) * 14deg)) scale(.965)}
+body.pmove .glass,body.pmove .holo,body.pmove #dock{-webkit-backdrop-filter:none;backdrop-filter:none;background:linear-gradient(140deg,rgba(60,50,110,.6),rgba(25,20,55,.55))}
 
 /* ===================== HACKER HUD ===================== */
 @keyframes capOn{0%,100%{opacity:1}50%{opacity:.35}}
@@ -667,7 +688,7 @@ body.noshadow .lightfx{display:none}
 .ldov{position:absolute;left:28px;right:28px;top:30px;z-index:5;text-align:center}
 .ldov .hz{margin:0 0 8px}.ldov .bst{font:500 11px Orbitron;letter-spacing:.38em;color:var(--pk);text-shadow:0 0 8px var(--pk)}
 .ldov pre{text-align:left;margin-top:40px;font:500 9px/1.5 var(--mono);color:color-mix(in srgb,var(--fr) 60%,#fff);text-shadow:0 0 5px var(--fr);white-space:pre-wrap;height:140px;overflow:hidden}
-.hz u.fill{animation:hzRun 1s linear infinite,fillBar .7s ease-out both}
+.hz u.fill{animation:hzRun 1s linear infinite,fillBar .32s ease-out both}
 .page.in .hrow:nth-child(1){animation:holoIn .5s var(--eo) both}
 body.hud .page.in .grid .ai{animation:flipIn .45s var(--sp) both;animation-delay:calc(200ms + var(--k,0) * 45ms)}
 /* noticias: miniaturas */
@@ -703,6 +724,15 @@ body.hud .page.in .grid .ai{animation:flipIn .45s var(--sp) both;animation-delay
 .tg.on i::after{left:18px;background:var(--fr);box-shadow:0 0 8px var(--fr)}
 .sbtns{display:flex;gap:10px}
 .pok{color:var(--fr,#7CFF3A);font-size:18px}
+
+/* rendimiento */
+body.hud.drawerOpen #wall,body.hud.folderOpen #wall,body.hud.editing #wall{filter:brightness(.45)}
+body.hud #wall{transition:filter .25s}
+body.hud .page.in .hrow{animation-duration:.34s}
+body.hud .page.in .grid .ai{animation-duration:.3s;animation-delay:calc(60ms + var(--k,0) * 22ms)}
+body.drawerOpen .dg:nth-of-type(n+5) .ai{animation:none}
+.jvbg{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+#boot{transition:opacity .28s,transform .28s}
 
 /* noticias (adaptado) */
 /* ===== panel de noticias ===== */
@@ -1062,8 +1092,12 @@ window.onWallpaperSet=ok=>toast(ok?T().wallOk:'Error');
 let tiltOn=false,tt={x:0,y:0},tc={x:0,y:0},base=null,raf=0;
 function onOri(e){if(e.beta==null)return;if(!base)base={b:e.beta,g:e.gamma};let gx=(e.gamma-base.g),by=(e.beta-base.b);
   base.b+=(e.beta-base.b)*.004;base.g+=(e.gamma-base.g)*.004;tt.x=Math.max(-1,Math.min(1,gx/22));tt.y=Math.max(-1,Math.min(1,by/22));if(!raf)raf=requestAnimationFrame(tiltFrame)}
-function tiltFrame(){raf=0;tc.x+=(tt.x-tc.x)*.12;tc.y+=(tt.y-tc.y)*.12;const R=document.documentElement.style;R.setProperty('--tx',(tc.x*10).toFixed(2)+'px');R.setProperty('--ty',(tc.y*10).toFixed(2)+'px');R.setProperty('--nx',tc.x.toFixed(3));R.setProperty('--ny',tc.y.toFixed(3));
-  $('#pager').style.transform=`translate3d(${(tc.x*4).toFixed(2)}px,${(tc.y*4).toFixed(2)}px,0)`;
+const TILT_EL=()=>TILT_EL.c||(TILT_EL.c=['#wall','#floor'].map(s=>$(s)).filter(Boolean));
+let tiltLast=0;
+function tiltFrame(n){raf=0;if(n&&n-tiltLast<45){raf=requestAnimationFrame(tiltFrame);return}tiltLast=n||performance.now();tc.x+=(tt.x-tc.x)*.3;tc.y+=(tt.y-tc.y)*.3;
+  /* rendimiento: las variables se ponen solo en las capas que las usan (no en la raíz); en HUD solo se mueve el fondo */
+  const hud=S.skin==='hud';TILT_EL().forEach((el,i)=>{if(hud&&i>0)return;const R=el.style;R.setProperty('--tx',(tc.x*10).toFixed(2)+'px');R.setProperty('--ty',(tc.y*10).toFixed(2)+'px');R.setProperty('--nx',tc.x.toFixed(3));R.setProperty('--ny',tc.y.toFixed(3))});
+  if(!hud)$('#pager').style.transform=`translate3d(${(tc.x*4).toFixed(2)}px,${(tc.y*4).toFixed(2)}px,0)`;
   if(Math.abs(tt.x-tc.x)>.002||Math.abs(tt.y-tc.y)>.002)raf=requestAnimationFrame(tiltFrame)}
 function tiltSetup(){const want=!!S.tilt&&!document.hidden;if(want&&!tiltOn){window.addEventListener('deviceorientation',onOri);tiltOn=true;base=null}
   else if(!want&&tiltOn){window.removeEventListener('deviceorientation',onOri);tiltOn=false;tt={x:0,y:0};if(!raf)raf=requestAnimationFrame(tiltFrame)}}
@@ -1148,8 +1182,8 @@ function layoutPages(pos){POS=pos;const W=$('#pager').clientWidth||innerWidth;$$
     el.style.transform=tr;el.style.zIndex=d<=0?2:1});
   $$('#dots i:not(.fd)').forEach((d,i)=>d.classList.toggle('on',i===Math.round(pos)));if(typeof hudOnPage==='function'&&Number.isInteger(pos))hudOnPage(pos)}
 function goPage(i,anim=true){i=Math.max(0,Math.min(pagesCount()-1,i));const from=POS;S.page=i;save();
-  if(!anim){layoutPages(i);return}const t0=performance.now(),dur=380;cancelAnimationFrame(goPage._r);
-  const st=n=>{const k=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-k,3);layoutPages(from+(i-from)*e);if(k<1)goPage._r=requestAnimationFrame(st);else{layoutPages(i);if(Math.round(from)!==i)animIn()}};goPage._r=requestAnimationFrame(st)}
+  if(!anim){layoutPages(i);document.body.classList.remove('pmove');return}document.body.classList.add('pmove');const t0=performance.now(),dur=380;cancelAnimationFrame(goPage._r);
+  const st=n=>{const k=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-k,3);layoutPages(from+(i-from)*e);if(k<1)goPage._r=requestAnimationFrame(st);else{layoutPages(i);document.body.classList.remove('pmove');if(Math.round(from)!==i)animIn()}};goPage._r=requestAnimationFrame(st)}
 
 /* ---------- gestos en inicio: páginas, cajón, noticias, notificaciones ---------- */
 (()=>{const hm=$('#home');let sx=0,sy=0,st=0,lock=0,dx=0,dy=0,W=1,feed=false,drw=false,startEl=null;
@@ -1159,6 +1193,7 @@ function goPage(i,anim=true){i=Math.max(0,Math.min(pagesCount()-1,i));const from
     if(!lock){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.2){lock=1;feed=(S.page|0)===0&&dx>0&&S.feedOn&&!document.body.classList.contains('editing');if(feed){$('#feed').classList.add('drag');openFeedPrep()}}
       else if(Math.abs(dy)>10){lock=2;drw=dy<0&&!document.body.classList.contains('editing');if(drw){openDrawerPrep();$('#drawer').classList.add('drag')}}else return}
     if(e.cancelable)e.preventDefault();
+    if(lock===1&&!feed)document.body.classList.add('pmove');
     if(lock===1){if(feed){$('#feed').style.transform=`translateX(${Math.min(0,-W+dx)}px)`;$('#fshade').style.opacity=Math.min(.35,dx/W*.35)}else{let p=(S.page|0)-dx/W;const n=pagesCount();if(p<0)p=p*.25;if(p>n-1)p=n-1+(p-n+1)*.25;layoutPages(p)}}
     else if(lock===2&&drw){const y=Math.max(0,innerHeight+dy);$('#drawer').style.transform=`translateY(${y}px)`;document.body.classList.toggle('drawerOpen',dy<-innerHeight*.15)}},{passive:false});
   const end=()=>{const v=Math.max(Math.abs(dx),Math.abs(dy))/Math.max(1,Date.now()-st);
@@ -1965,10 +2000,10 @@ window.addEventListener('resize',()=>setTimeout(hudFit,50));
 
 /* navegación con carga (como en el tema): marco vacío -> barra de carga + terminal -> contenido */
 const LOGL=['[ OK ] Started Journal Service.','[ OK ] Reached target Paths.','Mounting POSIX Message Queue...','[ OK ] Listening on udev Kernel Socket.','Starting LVM2 metadata daemon...','[ OK ] Mounted Huge Pages File System.','dev-disk-by-uuid '+Math.random().toString(16).slice(2,12),'Check sum ........ OK','Secure connection is established','All files are protected!!'];
-function hudGo(k){const i=vIdx(k);if(i<0)return;hap('tick');const anim=S.hfx!==false;goPage(i,false);hudOnPage(i);if(!anim){animIn();return}
+function hudGo(k){const i=vIdx(k);if(i<0)return;$$('.page.ld').forEach(x=>{x.classList.remove('ld');const o=x.querySelector('.ldov');if(o)o.remove()});hap('tick');const anim=S.hfx!==false;goPage(i,false);hudOnPage(i);if(!anim){animIn();return}
   const p=$(`.page[data-pi="${i}"]`);if(!p)return;p.classList.add('ld');let ov=p.querySelector('.ldov');if(ov)ov.remove();ov=document.createElement('div');ov.className='ldov';
   ov.innerHTML=`<div class="hz"><i></i><u class="fill"></u><i></i></div><b class="bst">${H().boot}</b><pre></pre>`;p.appendChild(ov);const pre=ov.querySelector('pre');let n=0;
-  const st=()=>{if(!ov.isConnected)return;if(n<7){pre.textContent+=LOGL[(n+Math.floor(Math.random()*4))%LOGL.length]+'\n';n++;setTimeout(st,65)}else{ov.querySelector('.bst').textContent=H().done;setTimeout(()=>{ov.remove();p.classList.remove('ld');animIn();frames(p);hudFit();if(k==='class')hudCenterDrum()},220)}};setTimeout(st,120)}
+  const st=()=>{if(!ov.isConnected)return;if(n<4){pre.textContent+=LOGL[(n+Math.floor(Math.random()*4))%LOGL.length]+'\n';n++;setTimeout(st,45)}else{ov.querySelector('.bst').textContent=H().done;setTimeout(()=>{ov.remove();p.classList.remove('ld');animIn();frames(p);hudFit();if(k==='class')hudCenterDrum()},90)}};setTimeout(st,40)}
 $('#hudBot').addEventListener('click',e=>{const m=e.target.closest('[data-m]');if(m){hap();cmd(m.dataset.m);return}const vb=e.target.closest('[data-v]');if(vb){hap('tick');try{has('volume')&&Android.volume(+vb.dataset.v)}catch(x){}setTimeout(hudVol,150);return}
   const b=e.target.closest('[data-w]');if(!b)return;const w=b.dataset.w;hap();
   if(w==='acc')hudGo(HK==='media'?'main':'media');else if(w==='log')hudGo(HK==='class'?'main':'class');else if(w==='set')hudGo(HK==='set'?'main':'set');
@@ -2009,9 +2044,9 @@ const BOOTL=['[ OK ] Started Journal Service.','Mounting POSIX Message Queue Fil
 function hudBoot(force){if(!HUDON()||(S.boot===false&&!force)||$('#boot'))return;const h=H();const el=document.createElement('div');el.id='boot';
   el.innerHTML=`<div class="hf hp bt1" data-f="bot"><div class="hz"><i></i><u class="fill"></u><i></i></div><b class="bst">${h.boot}</b></div><div class="hf hp bt2" data-f="tab side"><span class="haz"></span><pre id="bLog"></pre></div>`;
   document.body.appendChild(el);frames(el);const log=$('#bLog');let i=0;
-  const step=()=>{if(!el.isConnected)return;if(i<BOOTL.length){log.textContent+=BOOTL[i++]+'\n';log.scrollTop=1e9;setTimeout(step,70+Math.random()*60)}
-    else{el.querySelector('.bst').textContent=h.done;el.classList.add('ok');setTimeout(()=>{el.querySelector('.bst').textContent=h.granted},380);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),450)},1000)}};
-  setTimeout(step,350);el.onclick=()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)}}
+  const step=()=>{if(!el.isConnected)return;if(i<BOOTL.length){log.textContent+=BOOTL[i++]+'\n';log.scrollTop=1e9;setTimeout(step,32+Math.random()*28)}
+    else{el.querySelector('.bst').textContent=h.done;el.classList.add('ok');setTimeout(()=>{el.querySelector('.bst').textContent=h.granted},200);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)},520)}};
+  setTimeout(step,120);el.onclick=()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)}}
 function hudFirstRun(){if(!HUDON()||!NATIVE||S.permAsked)return;S.permAsked=true;save();setTimeout(permSheet,3600)}
 const _rfH=renderFeed;renderFeed=function(a){_rfH(a);if(HUDON())hudNews()};
 
@@ -2024,7 +2059,7 @@ window.onAndroidHome=()=>{if(HUDON()&&!document.body.classList.contains('drawerO
 window.onAndroidResume=()=>{sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
 window.addEventListener('resize',()=>layoutPages(S.page|0));
 if(!S.pages||!S.dock)defaultLayout();cleanLayout();
-applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
+applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();(window.requestIdleCallback||setTimeout)(()=>{try{renderDrawer()}catch(e){}},{timeout:1500});if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
 if(NATIVE){nativeDev();setInterval(()=>{if(!document.hidden&&(S.page|0)===1){nativeDev();refreshWidgets()}},30000)}
 pollMedia();refreshNEV(true);if(S.wxLoc)loadWx(false);else setTimeout(()=>geoLocate(true),1500);
 if(NATIVE&&has('gestureStatus')&&!S.gAsked){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}
