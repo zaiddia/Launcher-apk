@@ -1573,6 +1573,7 @@ public class MainActivity extends Activity {
                 o.put("home", isDefaultLauncher());
                 o.put("gestures", GestureService.instance != null || secureHas("enabled_accessibility_services", GestureService.class));
                 o.put("notifications", Build.VERSION.SDK_INT < 33 || granted("android.permission.POST_NOTIFICATIONS"));
+                o.put("activity", Build.VERSION.SDK_INT < 29 || granted("android.permission.ACTIVITY_RECOGNITION"));
                 PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
                 o.put("battery", pm != null && pm.isIgnoringBatteryOptimizations(getPackageName()));
                 o.put("secure", granted("android.permission.WRITE_SECURE_SETTINGS"));
@@ -1672,6 +1673,7 @@ public class MainActivity extends Activity {
                     case "phone": want.add(Manifest.permission.CALL_PHONE); break;
                     case "calllog": want.add(Manifest.permission.READ_CALL_LOG); break;
                     case "sms": want.add(Manifest.permission.READ_SMS); break;
+                    case "activity": if (Build.VERSION.SDK_INT >= 29) want.add("android.permission.ACTIVITY_RECOGNITION"); break;
                     case "notifications": if (Build.VERSION.SDK_INT >= 33) want.add("android.permission.POST_NOTIFICATIONS"); break;
                 }
             }
@@ -1679,6 +1681,37 @@ public class MainActivity extends Activity {
             for (String p : want) if (!granted(p)) miss.add(p);
             if (miss.isEmpty()) { js("window.onPerms&&window.onPerms()"); return; }
             runOnUiThread(() -> requestPermissions(miss.toArray(new String[0]), REQ_ALL));
+        }
+
+        /* ---------- pasos (sensor del sistema, sin servicio en segundo plano) ---------- */
+        @JavascriptInterface
+        public void stepsAsync() {
+            runOnUiThread(() -> {
+                try {
+                    if (Build.VERSION.SDK_INT >= 29 && !granted("android.permission.ACTIVITY_RECOGNITION")) { js("window.onSteps&&window.onSteps(-2)"); return; }
+                    final android.hardware.SensorManager sm = (android.hardware.SensorManager) getSystemService(Context.SENSOR_SERVICE);
+                    android.hardware.Sensor st = sm == null ? null : sm.getDefaultSensor(android.hardware.Sensor.TYPE_STEP_COUNTER);
+                    if (st == null) { js("window.onSteps&&window.onSteps(-1)"); return; }
+                    sm.registerListener(new android.hardware.SensorEventListener() {
+                        boolean done = false;
+                        @Override public void onSensorChanged(android.hardware.SensorEvent e) {
+                            if (done) return; done = true; sm.unregisterListener(this);
+                            js("window.onSteps&&window.onSteps(" + (long) e.values[0] + ")");
+                        }
+                        @Override public void onAccuracyChanged(android.hardware.Sensor s, int a) { }
+                    }, st, android.hardware.SensorManager.SENSOR_DELAY_NORMAL);
+                } catch (Exception e) { js("window.onSteps&&window.onSteps(-1)"); }
+            });
+        }
+
+        /** Próxima alarma del reloj del sistema (texto), o vacío. */
+        @JavascriptInterface
+        public String nextAlarm() {
+            try {
+                android.app.AlarmManager am = (android.app.AlarmManager) getSystemService(Context.ALARM_SERVICE);
+                android.app.AlarmManager.AlarmClockInfo i = am.getNextAlarmClock();
+                return i == null ? "" : String.valueOf(i.getTriggerTime());
+            } catch (Exception e) { return ""; }
         }
 
         /* ---------- modo app independiente (J.A.R.V.I.S.) ---------- */
@@ -1928,6 +1961,10 @@ public class MainActivity extends Activity {
                 o.put("charging", status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL);
                 int temp = b != null ? b.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) : -1;
                 if (temp > 0) o.put("temp", temp / 10.0);
+                int volt = b != null ? b.getIntExtra(BatteryManager.EXTRA_VOLTAGE, -1) : -1;
+                if (volt > 0) o.put("volt", volt);
+                int health = b != null ? b.getIntExtra(BatteryManager.EXTRA_HEALTH, -1) : -1;
+                o.put("health", health == BatteryManager.BATTERY_HEALTH_GOOD ? "OK" : health == BatteryManager.BATTERY_HEALTH_OVERHEAT ? "HOT" : health == BatteryManager.BATTERY_HEALTH_DEAD ? "DEAD" : "—");
                 BatteryManager bm = (BatteryManager) getSystemService(Context.BATTERY_SERVICE);
                 if (Build.VERSION.SDK_INT >= 28) o.put("chargeLeft", bm.computeChargeTimeRemaining());
                 o.put("current", bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW));

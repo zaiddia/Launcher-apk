@@ -2,7 +2,7 @@
    HACKER HUD v2 — una sola pantalla: panel central que cambia + base fija
    (recreado de los temas "Hacker theme for KLWP": Stark / Matrix / Shadow)
    ===================================================================== */
-const HUDON=()=>S.skin==='hud';
+const HUDON=()=>S.skin==='hud'||S.skin==='ship';
 /* paletas: línea, esquinas gruesas, energía, acento de texto, nombre */
 const HUDC={matrix:['#7CFF3A','#F5D9A8','#35E7FF','#FF3B4E','Matrix'],shadow:['#FF4D6D','#B6FF3B','#3BFF7A','#FF4D6D','Shadow'],stark:['#FF8A3D','#FFB36B','#35E7FF','#FF3B6B','Stark'],
   cyan:['#35E7FF','#E8F7FF','#7CFF3A','#FF3B6B','Cyber'],violet:['#B07CFF','#F2D7FF','#35E7FF','#FF3B9A','Nebula']};
@@ -36,16 +36,25 @@ const HT={es:{cov:'COBERTURA GLOBAL',radar:'SISTEMA RADAR',power:'ENERGÍA',diag
     pPh:'Phone',pPhS:'J.A.R.V.I.S. can call',pLog:'Call log',pLogS:'Missed calls counter',pSms:'SMS',pSmsS:'Unread messages counter',pNot:'Notification access',pNotS:'Notification counter and music',
     pHome:'Home app',pHomeS:'Open Aura with the home button',pGes:'Navigation gestures',pGesS:'Gestures on HyperOS with this launcher',open:'Open'}};
 const H=()=>HT[S.lang]||(S.lang==='pt'?HT.es:HT.en);
-function hudColors(){const c=HUDC[S.hudc]||HUDC.matrix;const R=document.body.style;R.setProperty('--fr',c[0]);R.setProperty('--fr2',c[1]);R.setProperty('--tl',c[2]);R.setProperty('--pk',c[3]);
+function hudColors(){if(S.skin==='ship'){shipColors();document.body.classList.toggle('noshadow',S.shadow===false);return}const c=HUDC[S.hudc]||HUDC.matrix;const R=document.body.style;R.setProperty('--fr',c[0]);R.setProperty('--fr2',c[1]);R.setProperty('--tl',c[2]);R.setProperty('--pk',c[3]);
   document.body.classList.toggle('noshadow',S.shadow===false)}
 /* páginas virtuales del HUD */
-function VP(){if(!HUDON())return S.pages.map((_,i)=>({k:'apps',pi:i}));const v=[{k:'main',pi:-1},{k:'class',pi:0},{k:'media',pi:-1},{k:'set',pi:-1}];for(let i=1;i<S.pages.length;i++)v.push({k:'apps',pi:i});return v}
+function VP(){if(!HUDON())return S.pages.map((_,i)=>({k:'apps',pi:i}));if(S.skin==='ship')return [{k:'sys',pi:-1},{k:'ship',pi:-1},...S.pages.map((_,i)=>({k:'apps',pi:i}))];const v=[{k:'main',pi:-1},{k:'class',pi:0},{k:'media',pi:-1},{k:'set',pi:-1}];for(let i=1;i<S.pages.length;i++)v.push({k:'apps',pi:i});return v}
 const vIdx=k=>VP().findIndex(v=>v.k===k);
 
 /* ---------- marcos con esquinas cortadas (SVG a la medida) ---------- */
 const FRO=typeof ResizeObserver!=='undefined'?new ResizeObserver(es=>es.forEach(e=>drawFrame(e.target))):null;
 function drawFrame(el){const w=el.offsetWidth,h=el.offsetHeight;if(!w||!h)return;if(el._fw===w&&el._fh===h)return;el._fw=w;el._fh=h;
-  const f=el.dataset.f||'plain',c=14,t=f.includes('tab')?10:0,b=f.includes('bot')?10:0,x1=w*.28,x2=w*.72,y0=t,y1=h-b;
+  const f=el.dataset.f||'plain';
+  if(f.startsWith('ship')){let s=el.querySelector(':scope>svg.fr');if(!s){s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('class','fr');el.prepend(s)}
+    const c=10,C=Math.min(54,h*.22);let p,q;
+    if(f==='ship-frame'){const k=10,y=Math.round(h*.585),c2=24;p=`M${c2+k},0L${w-c2-k},0L${w-k},${c2}L${w-k},${y}L${w},${y+16}L${w},${h-c2}L${w-c2},${h}L${c2},${h}L0,${h-c2}L0,${y+16}L${k},${y}L${k},${c2}Z`;
+      q=`M${k+6},${c2+40}L${k+6},${c2+4}L${c2+k+4},6L${w*.3},6M${w-k-6},${c2+40}L${w-k-6},${c2+4}L${w-c2-k-4},6L${w*.7},6M6,${y+40}L6,${h-c2-4}L${c2+4},${h-6}L${w*.3},${h-6}M${w-6},${y+40}L${w-6},${h-c2-4}L${w-c2-4},${h-6}L${w*.7},${h-6}`}
+    else if(f==='ship-t'){p=`M${C},0L${w-c},0L${w},${c}L${w},${h}L0,${h}L0,${C}Z`;q=`M6,${C+20}L6,${C+2}L${C+2},6L${C+60},6`}
+    else{p=`M${c},0L${w},0L${w},${h-C}L${w-C},${h}L0,${h}L0,${c}Z`;q=`M${w-6},${h-C-20}L${w-6},${h-C-2}L${w-C-2},${h-6}L${w-C-60},${h-6}`}
+    s.setAttribute('viewBox',`-2 -2 ${w+4} ${h+4}`);s.style.width=(w+4)+'px';s.style.height=(h+4)+'px';
+    s.innerHTML=`<path d="${p}" class="bd"/><path d="${p}" class="gl"/><path d="${p}" class="ln"/><path d="${q}" class="ac2"/>`;return}
+  const c=14,t=f.includes('tab')?10:0,b=f.includes('bot')?10:0,x1=w*.28,x2=w*.72,y0=t,y1=h-b;
   let p=`M${c},${y0}`;if(t)p+=`L${x1},${y0}L${x1+t},0L${x2-t},0L${x2},${y0}`;p+=`L${w-c},${y0}L${w},${y0+c}L${w},${y1-c}L${w-c},${y1}`;
   if(b)p+=`L${x2},${y1}L${x2-b},${h}L${x1+b},${h}L${x1},${y1}`;p+=`L${c},${y1}L0,${y1-c}L0,${y0+c}Z`;
   const acc=`M4,${y0+c+22}L4,${y0+c+4}L${c+4},${y0+4}L${c+40},${y0+4}M${w-4},${y1-c-22}L${w-4},${y1-c-4}L${w-c-4},${y1-4}L${w-c-40},${y1-4}`;
@@ -135,7 +144,7 @@ function hSet(){const h=H(),c=HUDC[S.hudc]||HUDC.matrix;
 
 /* ---------- base fija: botones, tarjeta, reloj ---------- */
 let HK='';
-function hudBottom(){const el=$('#hudBot');if(!el)return;if(!HUDON()){el.innerHTML='';HK='';return}const h=H(),k=(VP()[S.page|0]||{}).k||'main';HK=k;
+function hudBottom(){const el=$('#hudBot');if(!el)return;if(!HUDON()){el.innerHTML='';HK='';return}if(SHIPON()){HK=(VP()[S.page|0]||{}).k||'ship';if(!el.querySelector('.shdock'))shBottom();shTop();const sf=$('#shipFrame');sf._fw=0;frames(sf.parentNode);return}const h=H(),k=(VP()[S.page|0]||{}).k||'main';HK=k;
   const on1=k==='media',on2=k==='class';
   let card;
   if(k==='class')card=`<button class="hf hp hcard mapc" data-f="tab" data-w="wx">${hMap(true)}</button>`;
@@ -159,8 +168,8 @@ let HCK=0;function hudClock(){clearTimeout(HCK);if(!HUDON()||document.hidden)ret
 function hudVol(){const v=$('#hVol');if(!v)return;let lv=.5;try{if(has('volume')){const r=Android.volume(0);if(typeof r==='number')lv=r}}catch(e){}v.querySelectorAll('i').forEach((i,k)=>i.classList.toggle('on',k<Math.round(lv*8)))}
 
 /* ---------- integración ---------- */
-function hudPanels(v){return v.k==='main'?hMain():v.k==='class'?hClass():v.k==='media'?hMedia():v.k==='set'?hSet():''}
-function hudUpdate(){if(!HUDON())return;const h=H(),v=DI.bat;
+function hudPanels(v){if(SHIPON())return shPanels(v);return v.k==='main'?hMain():v.k==='class'?hClass():v.k==='media'?hMedia():v.k==='set'?hSet():''}
+function hudUpdate(){if(!HUDON())return;if(SHIPON()){shUpdate();return}const h=H(),v=DI.bat;
   const wk=JSON.stringify([S.wx,S.wxLoc&&S.wxLoc.name,S.unit]),mr=$('#hMapRow');if(mr&&mr._wk!==wk){mr._wk=wk;mr.innerHTML=hMap();frames(mr)}
   const caps=$('#hCaps');if(caps){const n=v==null?0:Math.round(v/100*9);caps.querySelectorAll('i').forEach((c,i)=>c.classList.toggle('on',i<n));caps.classList.toggle('chg',!!DI.chg);$('#hPct').textContent=(v??'—')+'%';
     $('#hBt').textContent=(v??'—')+'%'+(DI.temp!=null?'  '+Math.round(DI.temp)+'°C':'');$('#hDis').textContent=S.lang==='en'?(DI.chg?'CHARGING':'DISCHARGING'):(DI.chg?'CARGANDO':'EN USO')}
@@ -172,8 +181,8 @@ function hudUpdate(){if(!HUDON())return;const h=H(),v=DI.bat;
   const dy=$('#hDay');if(dy)dy.textContent=fmt(new Date(),{weekday:'long'}).toUpperCase();hudCard()}
 function hudNews(){const n=$('#hNews');if(n){n.innerHTML=hNewsIn();n._fw=0;drawFrame(n);hudFit()}}
 function hudCenterDrum(){const d=$('#hDrum');if(!d)return;const td=d.querySelector('.td');if(td)d.scrollTop=td.offsetTop-d.clientHeight/2+td.offsetHeight/2}
-function hudOnPage(i){if(!HUDON())return;const k=(VP()[i]||{}).k||'main';if(k!==HK){S.page=i;hudBottom();if(k==='media')hudVol();if(k==='set')hudWallThumbs()}}
-let HUDT=0,HUDN=0;function hudTick(){clearTimeout(HUDT);if(!HUDON()||document.hidden)return;if((VP()[S.page|0]||{}).k==='main'){sampleCPU();if(NATIVE)nativeDev();hudUpdate()}
+function hudOnPage(i){if(!HUDON())return;const k=(VP()[i]||{}).k||'main';if(SHIPON()){S.page=i;shTopUpd();if(k!=='ship')shCompass(false);else if(SHP==='map')shCompass(true);HK=k;return}if(k!==HK){S.page=i;hudBottom();if(k==='media')hudVol();if(k==='set')hudWallThumbs()}}
+let HUDT=0,HUDN=0;function hudTick(){clearTimeout(HUDT);if(!HUDON()||document.hidden)return;if(['main','ship','sys'].includes((VP()[S.page|0]||{}).k)){sampleCPU();if(NATIVE)nativeDev();hudUpdate()}
   if(Date.now()-HUDN>(ECO.eco?180000:60000)){HUDN=Date.now();sampleComm();hudCard();ecoCheck()}HUDT=setTimeout(hudTick,ECO.idle||ECO.eco?20000:5000);hudClock()}
 function hudFit(){if(!HUDON())return;$$('#pager .page').forEach(p=>{p.style.zoom='';const need=p.scrollHeight,have=p.clientHeight;if(need>have+2)p.style.zoom=Math.max(.66,have/need).toFixed(3)})}
 window.addEventListener('resize',()=>setTimeout(hudFit,50));
@@ -210,18 +219,18 @@ const PT={es:{t:'Permisos y sistema',s:'Todo se concede con los diálogos y ajus
   all:'Configurar todo automáticamente',run:'Permisos de Android',sp:'Ajustes especiales',xi:'Optimización de HyperOS',keep:'Mantener activo',keepS:'Servicio persistente con notificación mínima: HyperOS no cierra el launcher y abre al instante',
   adb:'Activación total por ADB (opcional)',adbS:'Conecta el celular al PC con depuración USB y ejecuta una vez este comando. Después Aura activa sola las notificaciones y los gestos:',copy:'Copiar',copied:'Copiado',
   step:(i,n)=>`Paso ${i} de ${n}`,done:'Listo: todo configurado',open:'Abrir',ok:'Conceder',
-  pNotif:'Notificaciones',pNotifS:'Para el aviso de «Mantener activo»',pAs:'J.A.R.V.I.S. como asistente',pAsS:'Elige «Aura» en Asistente digital: se abre con el gesto o botón de asistente',pBat:'Sin optimización de batería',pBatS:'Android no pausa el launcher',
+  pAct:'Actividad física',pActS:'Contar pasos en DATOS FÍSICOS',pNotif:'Notificaciones',pNotifS:'Para el aviso de «Mantener activo»',pAs:'J.A.R.V.I.S. como asistente',pAsS:'Elige «Aura» en Asistente digital: se abre con el gesto o botón de asistente',pBat:'Sin optimización de batería',pBatS:'Android no pausa el launcher',
   pAuto:'Inicio automático',pAutoS:'Que HyperOS no cierre Aura',pMb:'Ahorro de batería: Sin restricciones',pMbS:'Busca Aura y elige «Sin restricciones»',pPop:'Ventanas en segundo plano y bloqueo',pPopS:'Abrir apps y J.A.R.V.I.S. desde segundo plano'},
  en:{t:'Permissions & system',s:'Everything is granted through Android dialogs and settings. «Set up everything» walks through them and continues when you return.',
   all:'Set up everything automatically',run:'Android permissions',sp:'Special settings',xi:'HyperOS optimization',keep:'Keep alive',keepS:'Persistent service with a minimal notification: HyperOS will not close the launcher',
   adb:'Full activation via ADB (optional)',adbS:'Connect the phone to a PC with USB debugging and run this once. Then Aura enables notifications and gestures by itself:',copy:'Copy',copied:'Copied',
   step:(i,n)=>`Step ${i} of ${n}`,done:'Done: everything is set up',open:'Open',ok:'Grant',
-  pNotif:'Notifications',pNotifS:'For the «Keep alive» notice',pAs:'J.A.R.V.I.S. as assistant',pAsS:'Choose «Aura» as digital assistant: opens with the assistant gesture or button',pBat:'No battery optimization',pBatS:'Android will not pause the launcher',
+  pAct:'Physical activity',pActS:'Count steps in FITNESS DATA',pNotif:'Notifications',pNotifS:'For the «Keep alive» notice',pAs:'J.A.R.V.I.S. as assistant',pAsS:'Choose «Aura» as digital assistant: opens with the assistant gesture or button',pBat:'No battery optimization',pBatS:'Android will not pause the launcher',
   pAuto:'Autostart',pAutoS:'So HyperOS does not close Aura',pMb:'Battery saver: No restrictions',pMbS:'Find Aura and choose «No restrictions»',pPop:'Background windows & lock screen',pPopS:'Open apps and J.A.R.V.I.S. from background'}};
 const PTT=()=>PT[S.lang]||(S.lang==='pt'?PT.es:PT.en);
 function permState(){let st={};try{st=has('permStatus')?JSON.parse(Android.permStatus()):{}}catch(e){}S.permVisited=S.permVisited||{};return st}
 function permLists(){const h=H(),p=PTT();
-  const R=[['location',h.pLoc,h.pLocS],['calendar',h.pCal,h.pCalS],['mic',h.pMic,h.pMicS],['contacts',h.pCon,h.pConS],['phone',h.pPh,h.pPhS],['calllog',h.pLog,h.pLogS],['sms',h.pSms,h.pSmsS],['notifications',p.pNotif,p.pNotifS]];
+  const R=[['location',h.pLoc,h.pLocS],['calendar',h.pCal,h.pCalS],['mic',h.pMic,h.pMicS],['contacts',h.pCon,h.pConS],['phone',h.pPh,h.pPhS],['calllog',h.pLog,h.pLogS],['sms',h.pSms,h.pSmsS],['activity',p.pAct,p.pActS],['notifications',p.pNotif,p.pNotifS]];
   const SP=[['home',h.pHome,h.pHomeS],['assistant',p.pAs,p.pAsS],['notif',h.pNot,h.pNotS],['gestures',h.pGes,h.pGesS],['battery',p.pBat,p.pBatS]];
   const XI=[['autostart',p.pAuto,p.pAutoS],['miuibattery',p.pMb,p.pMbS],['popup',p.pPop,p.pPopS]];
   return {R,SP,XI}}

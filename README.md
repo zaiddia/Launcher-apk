@@ -53,6 +53,14 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
+### Aura v2.2 — estilo «Nave» (Spacecraft), nuevo predeterminado
+- Marco naranja de pantalla completa con barra superior (hora, fecha, página « 2 », señal, batería) y dock de casillas.
+- **Principal**: chequeo de salud de la nave (anomalías = notificaciones, combustible = batería, velocidad = CPU, temperatura, control = RAM) y **trayectoria del sistema solar con las posiciones reales de los planetas hoy**.
+- **Menú radial** de 10 secciones: apps, noticias, música, datos físicos (pasos reales del sensor), espectro de color, navegación (brújula real + mapa), calendario (luna, amanecer/atardecer, signo, estación), clima por hora y a 3 días (UV, humedad, presión, viento), sistema y J.A.R.V.I.S.; centro = cajón.
+- **Página de sistema** (placa de circuitos): modelo, Android, CPU, próxima alarma, sol y luna, temperatura y voltaje de batería, memoria; accesos rápidos (Wi-Fi, linterna, ajustes, notificaciones, batería), **batería por hora** y escaneo del dispositivo.
+- Se adapta solo a cualquier proporción de pantalla (16:9 … 20:9).
+- Estilos disponibles: Nave · Hacker HUD · Holo (Más ajustes → Estilo).
+
 ### Aura v2.1 — J.A.R.V.I.S. integrado
 - Un solo APK: Aura incluye J.A.R.V.I.S. (no hace falta JARVIS.apk, que queda solo para usar con el tema de HyperOS).
 - Ícono propio «J.A.R.V.I.S.» en el cajón de cualquier launcher, botón J.A.R.V.I.S. en la tarjeta del día, avatar, núcleo de CLASSIFIED, gesto de asistente y orden por voz.

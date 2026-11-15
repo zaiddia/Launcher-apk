@@ -222,6 +222,7 @@ body.sheetOpen #sheet{transform:none;visibility:visible;transition:transform .42
 .spin{animation:spin 1s linear infinite}
 __HOLO_CSS__
 __HUD_CSS__
+__SHIP_CSS__
 /* noticias (adaptado) */
 __FEED_CSS__
 #feed{background:rgba(10,12,18,.94)!important;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
@@ -235,10 +236,12 @@ __JV_CSS__
 <body class="glow">
 <div id="wall"></div>
 <div id="shade"></div>
+<div id="shipFrame" class="hf" data-f="ship-frame"></div>
 <div id="floor"><i></i></div>
 <div id="parts"></div>
 <div id="dockpad"></div>
 <main id="home">
+  <div id="shipTop"></div>
   <div id="pager"></div>
   <div id="hudBot"></div>
   <div id="dots"></div>
@@ -310,11 +313,12 @@ for(const k in L){L[k].news=L[k].newsT}
 const KEY='aura.v1';
 const NEO=[['#00F0FF','#FF2BD6'],['#22D3EE','#3B82F6'],['#A78BFA','#EC4899'],['#34D399','#06B6D4'],['#FBBF24','#F97316'],['#F472B6','#8B5CF6'],['#A3E635','#10B981'],['#60A5FA','#6366F1'],['#FB7185','#F43F5E']];
 const COLORS=NEO.map(x=>x[0]);
-const DEF={v:4,saver:true,hz60:false,skin:'hud',hudc:'matrix',boot:true,shadow:true,permAsked:false,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
+const DEF={v:5,shipHue:28,saver:true,hz60:false,skin:'hud',hudc:'matrix',boot:true,shadow:true,permAsked:false,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
   w:{clock:true,wx:true,music:true,bat:true,ev:true},pages:null,dock:null,folders:{},hidden:[],labels2:{},gc:{},page:0,
   wxLoc:null,wx:null,unit:'C',h24:true,events:[],calSync:false,feedOn:true,feedTopic:0,homeAsked:false,gAsked:false,jvTalk:true,jvProv:'',jvKey:'',jvModel:'',jvVoice:''};
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
 if((S.v|0)<4){S.v=4;S.skin='hud';S.hudc='matrix';S.shadow=true;S.boot=true;S.wall='cyber';S.neo=0;S.trans='holo';S.hfx=true;try{Object.keys(localStorage).filter(x=>x.startsWith('wall:')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
+if((S.v|0)<5){S.v=5;S.skin='ship';S.page=1;S.shipHue=28;}
 if(!S.lang){const n=(navigator.language||'es').slice(0,2);S.lang=L[n]?n:'es'}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const T=()=>L[S.lang]||L.es;
@@ -332,7 +336,7 @@ if(has('edgeToEdge')){try{const j=JSON.parse(Android.edgeToEdge());onInsets(j.to
 /* ---------- tema ---------- */
 function applyTheme(){S.style='neo';const p=NEO[S.neo|0]||NEO[0];S.acc=p[0];const R=document.documentElement.style;R.setProperty('--acc',p[0]);R.setProperty('--acc2',p[1]);
   R.setProperty('--isz',S.isz+'px');R.setProperty('--cols',S.cols);
-  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nohfx',!S.hfx);if(typeof ecoCheck==='function')setTimeout(ecoCheck,0);document.body.classList.toggle('hud',S.skin==='hud');if(S.skin==='hud'){hudColors();const ss=$('#sysS');if(ss)ss.innerHTML=esc(H().sysS)+'<br>'+esc(H().conn)+': '+(navigator.onLine?'ONLINE':'OFFLINE')}document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
+  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nohfx',!S.hfx);if(typeof ecoCheck==='function')setTimeout(ecoCheck,0);document.body.classList.toggle('hud',S.skin==='hud'||S.skin==='ship');document.body.classList.toggle('ship',S.skin==='ship');if(S.skin==='hud'||S.skin==='ship'){hudColors();const ss=$('#sysS');if(ss)ss.innerHTML=esc(H().sysS)+'<br>'+esc(H().conn)+': '+(navigator.onLine?'ONLINE':'OFFLINE')}document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
 
 /* ---------- fondo ---------- */
 const WDB={db:null,open(){return new Promise((res,rej)=>{const r=indexedDB.open('auraWall',1);r.onupgradeneeded=()=>r.result.createObjectStore('w');r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error)})},
@@ -617,7 +621,7 @@ function closeSheet(){document.body.classList.remove('sheetOpen');document.activ
 $('#scrim').onclick=closeSheet;$('#sheet').addEventListener('click',e=>{if(e.target.closest('[data-x]'))closeSheet()});
 function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${esc(l)}${s?`<small>${esc(s)}</small>`:''}</span><button class="sw ${(path?S[path][k]:S[k])?'on':''}" data-k="${k}" ${path?`data-path="${path}"`:''}></button></div>`;
   sheet(`<h3><button class="x" data-x>${ic('close')}</button>${esc(t.home)}</h3>
-  <div class="grp"><div class="row"><span>${esc(t.skin)}</span><div class="seg">${[['hud','Hacker HUD'],['holo','Holo']].map(([v,l])=>`<button data-sk="${v}" class="${S.skin===v?'on':''}">${l}</button>`).join('')}</div></div>
+  <div class="grp"><div class="row"><span>${esc(t.skin)}</span><div class="seg">${[['ship','Nave'],['hud','Hacker HUD'],['holo','Holo']].map(([v,l])=>`<button data-sk="${v}" class="${S.skin===v?'on':''}">${l}</button>`).join('')}</div></div>
   ${S.skin==='hud'?`<div class="row"><span>${esc(t.hudc)}</span><div class="pal" style="padding:0">${Object.keys(HUDC).map(k=>`<button data-hc="${k}" class="${S.hudc===k?'on':''}" style="--c:${HUDC[k][0]};--cr:${HUDC[k][0]};width:26px;height:26px"></button>`).join('')}</div></div>${sw('boot',t.bootA,t.bootS)}`:''}</div>
   <div class="grp" style="margin-top:12px"><div class="row wrap"><span>${esc(t.trans)}</span><div class="seg">${[['holo','Holo'],['slide',t.slide],['depth',t.depth],['cube',t.cube]].map(([v,l])=>`<button data-tr="${v}" class="${S.trans===v?'on':''}">${esc(l)}</button>`).join('')}</div></div>
   ${sw('hfx',t.hfx,t.hfxS)}${sw('saver',t.saver,t.saverS)}${sw('hz60',t.hz60,t.hz60S)}${sw('labels',t.labels)}${sw('liquid',t.liquid)}${sw('glow',t.glow)}${sw('tilt',t.tilt,t.tiltS)}</div>
@@ -629,7 +633,7 @@ function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${e
   <div class="row"><span>${esc(t.cols)}</span><div class="seg">${[4,5].map(v=>`<button data-co="${v}" class="${S.cols===v?'on':''}">${v}</button>`).join('')}</div></div></div>
   <div class="grp" style="margin-top:14px"><button class="row link" id="regen" style="width:100%">${esc(t.regen)}</button><button class="row link" id="moreS" style="width:100%">${esc(t.more)}<span>›</span></button></div>`);
   const I2=$('#sheetIn');
-  I2.querySelectorAll('[data-sk]').forEach(b=>b.onclick=async()=>{S.skin=b.dataset.sk;if(S.skin==='hud'&&S.wall!=='photo')S.wall='cyber';else if(S.skin==='holo'&&S.wall==='cyber')S.wall='holo';S.page=0;save();applyTheme();await applyWall();renderHome(true);HK='';hudBottom();homeSettings();if(S.skin==='hud')hudBoot(true)});
+  I2.querySelectorAll('[data-sk]').forEach(b=>b.onclick=async()=>{S.skin=b.dataset.sk;if(S.skin==='hud'&&S.wall!=='photo')S.wall='cyber';else if(S.skin==='holo'&&S.wall==='cyber')S.wall='holo';S.page=S.skin==='ship'?1:0;$('#hudBot').innerHTML='';save();applyTheme();await applyWall();renderHome(true);HK='';hudBottom();homeSettings();if(S.skin==='hud')hudBoot(true)});
   I2.querySelectorAll('[data-hc]').forEach(b=>b.onclick=()=>{S.hudc=b.dataset.hc;save();applyTheme();hudRe();homeSettings()});
   I2.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k,pth=b.dataset.path;if(pth)S[pth][k]=!S[pth][k];else S[k]=!S[k];save();hap('tick');if(k==='saver'){ECO.idle=false;document.body.classList.remove('idle');ecoWake()}b.classList.toggle('on');applyTheme();if(pth)renderHome()});
   I2.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{S.trans=b.dataset.tr;save();I2.querySelectorAll('[data-tr]').forEach(x=>x.classList.toggle('on',x===b));const n=pagesCount();if(n>1){const p=S.page|0;goPage(p===0?1:0);setTimeout(()=>goPage(p),600)}});
@@ -675,7 +679,7 @@ function citySheet(){const t=T();sheet(`<h3><button class="x" data-x>${ic('close
 const MODELS={'23090RA98G':'Redmi Note 13 Pro+ 5G','23090RA98I':'Redmi Note 13 Pro+ 5G','23090RA98C':'Redmi Note 13 Pro+'};
 const gb=b=>(b/1073741824).toFixed(b>=1e11?0:1)+'GB';
 const DI={bat:null,chg:false,temp:null};
-function nativeDev(){try{DI.n=JSON.parse(Android.deviceInfo());const b=JSON.parse(Android.battery());DI.bat=b.level;DI.chg=b.charging;DI.temp=b.temp;DI.cur=b.current;DI.cc=b.counter;DI.ctr=b.chargeLeft}catch(e){}}
+function nativeDev(){try{DI.n=JSON.parse(Android.deviceInfo());const b=JSON.parse(Android.battery());DI.bat=b.level;DI.chg=b.charging;DI.temp=b.temp;DI.volt=b.volt;DI.cur=b.current;DI.cc=b.counter;DI.ctr=b.chargeLeft}catch(e){}}
 function remain(){const t=T();if(DI.chg){if(DI.ctr>0){const m=Math.round(DI.ctr/60000);return `${t.fullIn} ${m>=60?(m/60).toFixed(1)+' h':m+' min'}`}return t.charging}
   if(DI.cur&&DI.cc>0){let c=Math.abs(DI.cur);if(c<20000&&DI.cc>100000)c*=1000;if(c>1000){const h=DI.cc/c;if(h>.15&&h<96)return `${t.dis} ${h>=1?Math.round(h)+' h':Math.round(h*60)+' min'}`}}return t.calc}
 let NP=null,npArt='',npKey='',TORCH=false;const au={paused:true,volume:1};const songs=[];let cur=-1;
@@ -717,6 +721,7 @@ __GEST_JS__
 __JARVIS_JS__
 __FEED_JS__
 __HUD_JS__
+__SHIP_JS__
 
 /* ---------- arranque ---------- */
 window.onAndroidBack=()=>{if(document.body.classList.contains('sheetOpen'))closeSheet();else if(JV.on)jvClose();else if($('#ctx').classList.contains('on'))closeCtx();else if(OPENF)closeFolder();else if(document.body.classList.contains('feedOpen'))closeFeed();

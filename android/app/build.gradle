@@ -13,7 +13,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode runNumber
-        versionName "2.1.${runNumber}"
+        versionName "2.2.${runNumber}"
     }
 
     // Llave de firma fija para que cada APK nuevo se instale como actualización.

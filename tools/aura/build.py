@@ -15,7 +15,7 @@ jh0=idx('<section id="jv" aria-label="JARVIS">');jh1=idx('<div id="fshade"></div
 fh1=idx('<div class="fl" id="fl">')
 t=open(__import__('os').path.join(__import__('os').path.dirname(__file__),'aura.tpl.html')).read()
 icons=L(i0,i1)
-rep={'__HOLO_CSS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'holo.css')).read(),'__FEED_CSS__':L(fc0,fc1-1),'__JV_CSS__':L(jc0,jc1-1),'__ICONS__':icons,'__WALLS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'walls.js')).read(),
+rep={'__SHIP_CSS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'ship.css')).read(),'__SHIP_JS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'ship.js')).read(),'__HUD_CSS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'hud.css')).read(),'__HUD_JS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'hud.js')).read().replace('__MAP__',open(__import__('os').path.join(__import__('os').path.dirname(__file__),'map.txt')).read().strip()),'__HOLO_CSS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'holo.css')).read(),'__FEED_CSS__':L(fc0,fc1-1),'__JV_CSS__':L(jc0,jc1-1),'__ICONS__':icons,'__WALLS__':open(__import__('os').path.join(__import__('os').path.dirname(__file__),'walls.js')).read(),
  '__GEST_JS__':L(g0,j0-1),'__JARVIS_JS__':L(j0,f0-1),'__FEED_JS__':L(f0,b0-1),
  '__JV_HTML__':L(jh0,jh1-1),'__FEED_HTML__':L(jh1,fh1)}
 for k,v in rep.items():
