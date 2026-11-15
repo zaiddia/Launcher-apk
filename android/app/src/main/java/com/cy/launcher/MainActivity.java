@@ -584,7 +584,6 @@ public class MainActivity extends Activity {
         });
     }
 
-    @Override
     /** Liberar memoria cuando el sistema la pide: así HyperOS tiene menos motivos para cerrar el launcher. */
     @Override
     public void onTrimMemory(int level) {
@@ -595,6 +594,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
     protected void onDestroy() {
         if (act == this) act = null;
         try { if (stt != null) stt.destroy(); } catch (Exception ignored) { }
