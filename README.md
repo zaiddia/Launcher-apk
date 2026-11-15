@@ -5,7 +5,7 @@ Dos pantallas de inicio para Android, optimizadas para el **Redmi Note 13 Pro+ 5
 | Tema | Carpeta | APK |
 |---|---|---|
 | **Launcher 27**: estilo iOS 27, con reloj gigante, mapa mundial, vinilo con letras sincronizadas, calendario y "faltan X días" | `web27/` | `Launcher-27.apk` |
-| **Aura**: estilo HyperOS 3 con colores vibrantes: widgets de cristal, brillo en los íconos, inclinación (giroscopio), carpetas líquidas, transiciones Deslizar/Profundidad/Cubo, 6 fondos generados + tu foto, J.A.R.V.I.S., noticias y gestos | `webaura/` | `Aura.apk` |
+| **Aura**: estilo HyperOS 3 futurista con cristal holográfico 3D (bordes iridiscentes, inclinación 3D, reloj con anillos, rejilla y partículas): widgets de cristal, brillo en los íconos, inclinación (giroscopio), carpetas líquidas, transiciones Deslizar/Profundidad/Cubo, 6 fondos generados + tu foto, J.A.R.V.I.S., noticias y gestos | `webaura/` | `Aura.apk` |
 | **Launcher CY**: estilo KLWP, con cabecera negra y esquina doblada, reloj, calendario, música y clima | `web/` | `Launcher-CY.apk` |
 
 Son apps distintas: puedes instalar las dos y elegir cuál usar como inicio.

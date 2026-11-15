@@ -219,6 +219,7 @@ body.sheetOpen #sheet{transform:none;visibility:visible;transition:transform .42
 #toast{position:fixed;left:50%;bottom:calc(var(--sab) + 120px);transform:translate(-50%,20px);background:rgba(20,22,28,.92);color:#fff;padding:10px 16px;border-radius:14px;font-size:13px;opacity:0;pointer-events:none;transition:.3s;z-index:90;max-width:86vw;text-align:center;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 .spin{animation:spin 1s linear infinite}
+__HOLO_CSS__
 /* noticias (adaptado) */
 __FEED_CSS__
 #feed{background:rgba(10,12,18,.94)!important;-webkit-backdrop-filter:blur(24px);backdrop-filter:blur(24px)}
@@ -232,6 +233,9 @@ __JV_CSS__
 <body class="glow">
 <div id="wall"></div>
 <div id="shade"></div>
+<div id="floor"><i></i></div>
+<div id="parts"></div>
+<div id="dockpad"></div>
 <main id="home">
   <div id="pager"></div>
   <div id="dots"></div>
@@ -268,7 +272,7 @@ __WALLS__
 /* ---------- textos ---------- */
 const L={
 es:{loc:'es-CO',search:'Buscar',drawerS:'Buscar apps…',apps:'apps',hiddenApps:'Apps ocultas',show:'Mostrar',cancel:'Cancelar',done:'Hecho',
-  home:'Ajustes de pantalla de inicio',trans:'Efectos de transición',slide:'Deslizar',depth:'Profundidad',cube:'Cubo',labels:'Mostrar etiquetas',liquid:'Carpeta líquida',glow:'Efecto brillo',tilt:'Inclinación',tiltS:'El fondo y los widgets se mueven al inclinar el celular',
+  home:'Ajustes de pantalla de inicio',trans:'Efectos de transición',slide:'Deslizar',depth:'Profundidad',cube:'Cubo',labels:'Mostrar etiquetas',hfx:'Efectos holográficos',hfxS:'Bordes iridiscentes animados, rejilla, partículas y escaneo',liquid:'Carpeta líquida',glow:'Efecto brillo',tilt:'Inclinación',tiltS:'El fondo y los widgets se mueven al inclinar el celular',
   wall:'Fondo de pantalla',myPhoto:'Tu foto',applySys:'Aplicar también al fondo del sistema',wallOk:'Fondo del sistema actualizado',accent:'Color',widgets:'Widgets',wClock:'Reloj',wWx:'Clima',wMusic:'Música',wBat:'Batería',wEv:'Próximo evento',
   isize:'Tamaño de íconos',cols:'Columnas',regen:'Regenerar todos los íconos',more:'Más ajustes',name:'Nombre',location:'Ubicación',locate:'Usar mi ubicación',city:'Buscar ciudad…',clock24:'Reloj 24 horas',unit:'Temperatura',
   setHome:'Usar como pantalla de inicio',musicAcc:'Ver lo que suena (acceso a notificaciones)',calSync:'Eventos del calendario del celular',news:'Noticias al deslizar a la derecha',gestures:'Gestos de navegación',
@@ -281,7 +285,7 @@ es:{loc:'es-CO',search:'Buscar',drawerS:'Buscar apps…',apps:'apps',hiddenApps:
   newsT:'Noticias',forYou:'Para ti',topics:['Para ti','Colombia','Mundo','Economía','Tecnología','Deportes','Entretenimiento','Ciencia','Salud'],nwOnly:'Las noticias funcionan en la versión APK.',nwErr:'No se pudieron cargar las noticias. Revisa tu conexión.',nwLoad:'Cargando noticias…',ago:['ahora','hace {n} min','hace {n} h','hace {n} d'],
   hours:'h',min:'min',dis:'Se descarga en',fullIn:'Llena en',calc:'Calculando…'},
 en:{loc:'en-US',search:'Search',drawerS:'Search apps…',apps:'apps',hiddenApps:'Hidden apps',show:'Show',cancel:'Cancel',done:'Done',
-  home:'Home screen settings',trans:'Transition effects',slide:'Slide',depth:'Depth',cube:'Cube',labels:'Show labels',liquid:'Liquid folder',glow:'Glow effect',tilt:'Tilt',tiltS:'Wallpaper and widgets move as you tilt the phone',
+  home:'Home screen settings',trans:'Transition effects',slide:'Slide',depth:'Depth',cube:'Cube',labels:'Show labels',hfx:'Holographic effects',hfxS:'Animated iridescent edges, grid, particles and scan',liquid:'Liquid folder',glow:'Glow effect',tilt:'Tilt',tiltS:'Wallpaper and widgets move as you tilt the phone',
   wall:'Wallpaper',myPhoto:'Your photo',applySys:'Also apply to system wallpaper',wallOk:'System wallpaper updated',accent:'Color',widgets:'Widgets',wClock:'Clock',wWx:'Weather',wMusic:'Music',wBat:'Battery',wEv:'Next event',
   isize:'Icon size',cols:'Columns',regen:'Regenerate all icons',more:'More settings',name:'Name',location:'Location',locate:'Use my location',city:'Search city…',clock24:'24-hour clock',unit:'Temperature',
   setHome:'Set as home screen',musicAcc:'See what is playing (notification access)',calSync:'Phone calendar events',news:'News when swiping right',gestures:'Navigation gestures',
@@ -299,12 +303,13 @@ for(const k in L){L[k].news=L[k].newsT}
 
 /* ---------- estado ---------- */
 const KEY='aura.v1';
-const NEO=[['#22D3EE','#3B82F6'],['#A78BFA','#EC4899'],['#34D399','#06B6D4'],['#FBBF24','#F97316'],['#F472B6','#8B5CF6'],['#A3E635','#10B981'],['#60A5FA','#6366F1'],['#FB7185','#F43F5E']];
+const NEO=[['#00F0FF','#FF2BD6'],['#22D3EE','#3B82F6'],['#A78BFA','#EC4899'],['#34D399','#06B6D4'],['#FBBF24','#F97316'],['#F472B6','#8B5CF6'],['#A3E635','#10B981'],['#60A5FA','#6366F1'],['#FB7185','#F43F5E']];
 const COLORS=NEO.map(x=>x[0]);
-const DEF={lang:null,name:'',wall:'sunset',neo:4,style:'neo',acc:'#F472B6',trans:'depth',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
+const DEF={v:2,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
   w:{clock:true,wx:true,music:true,bat:true,ev:true},pages:null,dock:null,folders:{},hidden:[],labels2:{},gc:{},page:0,
   wxLoc:null,wx:null,unit:'C',h24:true,events:[],calSync:false,feedOn:true,feedTopic:0,homeAsked:false,gAsked:false,jvTalk:true,jvProv:'',jvKey:'',jvModel:'',jvVoice:''};
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
+if((S.v|0)<2){S.v=2;S.wall='holo';S.neo=0;S.trans='holo';S.hfx=true;try{Object.keys(localStorage).filter(x=>x.startsWith('wall:')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
 if(!S.lang){const n=(navigator.language||'es').slice(0,2);S.lang=L[n]?n:'es'}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const T=()=>L[S.lang]||L.es;
@@ -322,7 +327,7 @@ if(has('edgeToEdge')){try{const j=JSON.parse(Android.edgeToEdge());onInsets(j.to
 /* ---------- tema ---------- */
 function applyTheme(){S.style='neo';const p=NEO[S.neo|0]||NEO[0];S.acc=p[0];const R=document.documentElement.style;R.setProperty('--acc',p[0]);R.setProperty('--acc2',p[1]);
   R.setProperty('--isz',S.isz+'px');R.setProperty('--cols',S.cols);
-  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
+  document.body.classList.toggle('glow',!!S.glow);document.body.classList.toggle('nohfx',!S.hfx);document.body.classList.toggle('nolabels',!S.labels);tiltSetup()}
 
 /* ---------- fondo ---------- */
 const WDB={db:null,open(){return new Promise((res,rej)=>{const r=indexedDB.open('auraWall',1);r.onupgradeneeded=()=>r.result.createObjectStore('w');r.onsuccess=()=>{this.db=r.result;res()};r.onerror=()=>rej(r.error)})},
@@ -345,7 +350,7 @@ window.onWallpaperSet=ok=>toast(ok?T().wallOk:'Error');
 let tiltOn=false,tt={x:0,y:0},tc={x:0,y:0},base=null,raf=0;
 function onOri(e){if(e.beta==null)return;if(!base)base={b:e.beta,g:e.gamma};let gx=(e.gamma-base.g),by=(e.beta-base.b);
   base.b+=(e.beta-base.b)*.004;base.g+=(e.gamma-base.g)*.004;tt.x=Math.max(-1,Math.min(1,gx/22));tt.y=Math.max(-1,Math.min(1,by/22));if(!raf)raf=requestAnimationFrame(tiltFrame)}
-function tiltFrame(){raf=0;tc.x+=(tt.x-tc.x)*.12;tc.y+=(tt.y-tc.y)*.12;const R=document.documentElement.style;R.setProperty('--tx',(tc.x*10).toFixed(2)+'px');R.setProperty('--ty',(tc.y*10).toFixed(2)+'px');
+function tiltFrame(){raf=0;tc.x+=(tt.x-tc.x)*.12;tc.y+=(tt.y-tc.y)*.12;const R=document.documentElement.style;R.setProperty('--tx',(tc.x*10).toFixed(2)+'px');R.setProperty('--ty',(tc.y*10).toFixed(2)+'px');R.setProperty('--nx',tc.x.toFixed(3));R.setProperty('--ny',tc.y.toFixed(3));
   $('#pager').style.transform=`translate3d(${(tc.x*4).toFixed(2)}px,${(tc.y*4).toFixed(2)}px,0)`;
   if(Math.abs(tt.x-tc.x)>.002||Math.abs(tt.y-tc.y)>.002)raf=requestAnimationFrame(tiltFrame)}
 function tiltSetup(){const want=!!S.tilt&&!document.hidden;if(want&&!tiltOn){window.addEventListener('deviceorientation',onOri);tiltOn=true;base=null}
@@ -400,16 +405,16 @@ function cleanLayout(){if(!NATIVE)return;const ok=p=>p.startsWith('f:')?!!S.fold
 const WXE=['☀️','⛅','☁️','🌫️','🌦️','🌧️','❄️','🌦️','⛈️'];
 const wcat=c=>c===0?0:c<=2?1:c===3?2:c<=48?3:c<=57?4:c<=67?5:c<=77?6:c<=82?7:c<=86?6:8;
 function wClock(){const d=new Date();let h=d.getHours();if(!S.h24)h=h%12||12;
-  return `<button class="wg wclock" data-w="clock"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="6" y="6" width="88" height="88" rx="20" fill="none" stroke="#CFC6BA" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="0 4.62" pathLength="370"/><rect id="wcm" x="6" y="6" width="88" height="88" rx="20" fill="none" stroke="url(#wcg)" stroke-width="3.2" stroke-linecap="round" pathLength="60" stroke-dasharray="0 1" /><defs><linearGradient id="wcg"><stop offset="0" stop-color="var(--acc)"/><stop offset="1" stop-color="var(--acc2)"/></linearGradient></defs></svg><b id="wct">${pad(h)}:${pad(d.getMinutes())}</b><small id="wcd">${esc(fmt(d,{weekday:'short',day:'numeric',month:'short'}))}</small></button>`}
+  return `<button class="wg glass wclock" data-w="clock"><span class="scan"></span><span class="rings"><i></i><i></i><i></i></span><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="7" y="7" width="86" height="86" rx="21" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="0 4.62" pathLength="370"/><rect id="wcm" x="7" y="7" width="86" height="86" rx="21" fill="none" stroke="url(#wcg)" stroke-width="2.6" stroke-linecap="round" pathLength="60" stroke-dasharray="0 1" style="filter:drop-shadow(0 0 3px var(--acc))"/><defs><linearGradient id="wcg"><stop offset="0" stop-color="var(--acc)"/><stop offset="1" stop-color="var(--acc2)"/></linearGradient></defs></svg><span class="dz" style="display:flex;flex-direction:column;align-items:center"><b class="hn" id="wct">${pad(h)}:${pad(d.getMinutes())}</b><small class="lab" id="wcd">${esc(fmt(d,{weekday:'short',day:'numeric',month:'short'}))}</small></span></button>`}
 function wWeather(){const t=T(),w=S.wx;
   if(!w||!S.wxLoc)return `<button class="wg glass wwx" data-w="wx"><div class="c">${ic('pin')}${esc(S.wxLoc?S.wxLoc.name:'—')}</div><div class="l" style="margin-top:auto">${esc(t.noLoc)}</div></button>`;
-  return `<button class="wg glass wwx" data-w="wx"><div class="c">${esc(S.wxLoc.name)}</div><div class="t"><b>${w.temp}°</b><span>${WXE[wcat(w.code)]}</span></div><div class="l"><b>${esc(cap(t.wx[wcat(w.code)]))}</b><br>${esc(t.precip)} ${w.rain??0}%<br>${esc(t.wind)} ${w.wind??'—'} km/h<br>${w.max!=null?`↑${w.max}° ↓${w.min}°`:''}</div></button>`}
+  return `<button class="wg glass wwx" data-w="wx"><div class="c dz">${ic('pin')}${esc(S.wxLoc.name)}</div><div class="t dz"><b class="hn">${w.temp}°</b><span>${WXE[wcat(w.code)]}</span></div><div class="l"><b>${esc(cap(t.wx[wcat(w.code)]))}</b><br>${esc(t.precip)} ${w.rain??0}%<br>${esc(t.wind)} ${w.wind??'—'} km/h<br>${w.max!=null?`↑${w.max}° ↓${w.min}°`:''}</div></button>`}
 function wMusic(){const t=T(),np=NP;const art=np&&npArt?`style="background-image:url(${npArt})"`:'';
-  return `<div class="wg glass wmu wbig" data-w="music"><span class="art" ${art}>${np&&npArt?'':ic('music')}</span><div class="tx"><small>${esc(np?(np.playing?t.playing:'II'):t.nothing).toUpperCase()}</small><b>${esc(np?np.title:'—')}</b><span>${esc(np?np.artist:'')}</span></div><div class="ctl"><button data-m="prev">${ic('prev')}</button><button class="pp" data-m="toggle">${ic(np&&np.playing?'pause':'play')}</button><button data-m="next">${ic('next')}</button></div></div>`}
+  return `<div class="wg glass wmu wbig" data-w="music"><span class="art" ${art}>${np&&npArt?'':ic('music')}</span><div class="tx"><small class="lab">${esc(np?(np.playing?t.playing:'II'):t.nothing)}${np&&np.playing&&S.hfx?'<span class="eq"><i></i><i></i><i></i></span>':''}</small><b>${esc(np?np.title:'—')}</b><span>${esc(np?np.artist:'')}</span></div><div class="ctl"><button data-m="prev">${ic('prev')}</button><button class="pp" data-m="toggle">${ic(np&&np.playing?'pause':'play')}</button><button data-m="next">${ic('next')}</button></div></div>`}
 function wBattery(){const t=T(),v=DI.bat??0,C=2*Math.PI*40;
-  return `<button class="wg glass wbat" data-w="bat"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="9"/><circle cx="50" cy="50" r="40" fill="none" stroke="url(#bg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(C*v/100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/><defs><linearGradient id="bg2"><stop offset="0" stop-color="var(--acc)"/><stop offset="1" stop-color="var(--acc2)"/></linearGradient></defs></svg><div class="v"><b>${DI.bat==null?'—':v+'%'}</b><small>${esc((DI.chg?'⚡ '+t.charging:t.battery).toUpperCase())}</small></div></button>`}
-function wEvent(){const t=T(),u=upcoming()[0];if(!u)return `<button class="wg glass wev" data-w="ev"><small>${esc(t.nextEv.toUpperCase())}</small><b>${esc(t.noev)}</b></button>`;
-  const d=parseD(u.d),n=Math.round((d-parseD(ymd(new Date())))/864e5);return `<button class="wg glass wev" data-w="ev"><small>${esc(t.nextEv.toUpperCase())}</small><b>${esc(u.e.title)}</b><span><span class="n">${n}</span> · ${esc(t.daysLeft(n))}${u.e.start?' · '+esc(u.e.start):''}</span></button>`}
+  return `<button class="wg glass wbat" data-w="bat"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="9"/><circle cx="50" cy="50" r="40" fill="none" stroke="url(#bg2)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${(C*v/100).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 50 50)"/><defs><linearGradient id="bg2"><stop offset="0" stop-color="var(--acc)"/><stop offset="1" stop-color="var(--acc2)"/></linearGradient></defs></svg><div class="v"><b class="hn">${DI.bat==null?'—':v+'%'}</b><small class="lab">${esc((DI.chg?'⚡ '+t.charging:t.battery).toUpperCase())}</small></div></button>`}
+function wEvent(){const t=T(),u=upcoming()[0];if(!u)return `<button class="wg glass wev" data-w="ev"><small class="lab">${esc(t.nextEv)}</small><b>${esc(t.noev)}</b></button>`;
+  const d=parseD(u.d),n=Math.round((d-parseD(ymd(new Date())))/864e5);return `<button class="wg glass wev" data-w="ev"><small class="lab">${esc(t.nextEv)}</small><b>${esc(u.e.title)}</b><span><span class="n">${n}</span> · ${esc(t.daysLeft(n))}${u.e.start?' · '+esc(u.e.start):''}</span></button>`}
 function widgetsFor(pi){let h='';if(pi===0&&(S.w.clock||S.w.wx))h+=`<div class="wrow">${S.w.clock?wClock():''}${S.w.wx?wWeather():''}</div>`;
   if(pi===1){if(S.w.music)h+=`<div class="wrow">${wMusic()}</div>`;if(S.w.bat||S.w.ev)h+=`<div class="wrow">${S.w.bat?wBattery():''}${S.w.ev?wEvent():''}</div>`}return h}
 function updClockW(){const d=new Date(),m=$('#wcm');if(m)m.setAttribute('stroke-dasharray',`${Math.max(.01,d.getMinutes())} 60`)}
@@ -424,7 +429,8 @@ function animIn(){const p=$(`.page[data-pi="${S.page|0}"]`);if(!p)return;let k=0
 function renderDots(){const n=pagesCount();$('#dots').innerHTML=(S.feedOn?'<i class="fd"></i>':'')+Array.from({length:n},(_,i)=>`<i class="${i===(S.page|0)?'on':''}"></i>`).join('')}
 function layoutPages(pos){POS=pos;const W=$('#pager').clientWidth||innerWidth;$$('.page').forEach(el=>{const i=+el.dataset.pi,d=i-pos,a=Math.abs(d);let tr='';
     if(a>=.999){el.style.visibility='hidden';el.style.pointerEvents='none';return}el.style.pointerEvents=a<.5?'':'none';el.style.visibility='';
-    if(S.trans==='cube'){tr=`translateX(${d*W}px) perspective(${W*2.2}px) rotateY(${d*-62}deg)`;el.style.transformOrigin=d<0?'100% 50%':'0% 50%';el.style.opacity=1-a*.35}
+    if(S.trans==='holo'){tr=`translateX(${d*W*.62}px) translateZ(${-a*260}px) rotateY(${d*-48}deg)`;el.style.transformOrigin='50% 50%';el.style.opacity=Math.max(0,1-a*1.15)}
+    else if(S.trans==='cube'){tr=`translateX(${d*W}px) perspective(${W*2.2}px) rotateY(${d*-62}deg)`;el.style.transformOrigin=d<0?'100% 50%':'0% 50%';el.style.opacity=1-a*.35}
     else if(S.trans==='depth'){if(d<0){tr=`translateX(${d*W}px)`;el.style.opacity=1}else{tr=`translateX(${d*W*.25}px) scale(${1-d*.18})`;el.style.opacity=Math.max(0,1-d)}el.style.transformOrigin='50% 50%'}
     else{tr=`translateX(${d*W}px)`;el.style.opacity=1}
     el.style.transform=tr;el.style.zIndex=d<=0?2:1});
@@ -587,8 +593,8 @@ function closeSheet(){document.body.classList.remove('sheetOpen');document.activ
 $('#scrim').onclick=closeSheet;$('#sheet').addEventListener('click',e=>{if(e.target.closest('[data-x]'))closeSheet()});
 function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${esc(l)}${s?`<small>${esc(s)}</small>`:''}</span><button class="sw ${(path?S[path][k]:S[k])?'on':''}" data-k="${k}" ${path?`data-path="${path}"`:''}></button></div>`;
   sheet(`<h3><button class="x" data-x>${ic('close')}</button>${esc(t.home)}</h3>
-  <div class="grp"><div class="row"><span>${esc(t.trans)}</span><div class="seg">${[['slide',t.slide],['depth',t.depth],['cube',t.cube]].map(([v,l])=>`<button data-tr="${v}" class="${S.trans===v?'on':''}">${esc(l)}</button>`).join('')}</div></div>
-  ${sw('labels',t.labels)}${sw('liquid',t.liquid)}${sw('glow',t.glow)}${sw('tilt',t.tilt,t.tiltS)}</div>
+  <div class="grp"><div class="row"><span>${esc(t.trans)}</span><div class="seg">${[['holo','Holo'],['slide',t.slide],['depth',t.depth],['cube',t.cube]].map(([v,l])=>`<button data-tr="${v}" class="${S.trans===v?'on':''}">${esc(l)}</button>`).join('')}</div></div>
+  ${sw('hfx',t.hfx,t.hfxS)}${sw('labels',t.labels)}${sw('liquid',t.liquid)}${sw('glow',t.glow)}${sw('tilt',t.tilt,t.tiltS)}</div>
   <h4>${esc(t.wall)}</h4><div class="walls" id="walls">${WALLS.map(([k,n])=>`<button data-w="${k}" class="${S.wall===k?'on':''}"><span>${esc(n)}</span></button>`).join('')}<button data-w="photo" class="${S.wall==='photo'?'on':''}" style="display:grid;place-items:center">${ic('image')}<span>${esc(t.myPhoto)}</span></button></div>
   ${has('setWallpaper')?`<button class="btn alt" id="wSys" style="width:100%;margin-top:10px">${esc(t.applySys)}</button>`:''}
   <h4>${esc(t.accent)}</h4><div class="pal">${NEO.map((c,i)=>`<button data-n="${i}" class="${i===(S.neo|0)?'on':''}" style="--c:linear-gradient(135deg,${c[0]},${c[1]});--cr:${c[0]}"></button>`).join('')}</div>
@@ -664,6 +670,15 @@ $('#pager').addEventListener('click',e=>{const m=e.target.closest('[data-m]');if
   const k=w.dataset.w;if(k==='clock'){has('openClock')&&Android.openClock()}else if(k==='wx'){S.wxLoc?loadWx(true):geoLocate(false)}else if(k==='bat'){has('openPanel')&&Android.openPanel('battery')}else if(k==='ev'){jvOpen(false,S.lang==='en'?'What do I have this week?':'¿Qué tengo esta semana?')}else if(k==='music'){NP&&NP.pkg?launchPkg(NP.pkg,null):(has('requestMediaAccess')&&!Android.hasMediaAccess()?Android.requestMediaAccess():null)}});
 function tick(){const d=new Date();let h=d.getHours();if(!S.h24)h=h%12||12;const e=$('#wct');if(e){e.textContent=pad(h)+':'+pad(d.getMinutes());$('#wcd').textContent=fmt(d,{weekday:'short',day:'numeric',month:'short'})}updClockW()}
 function schedTick(){tick();clearTimeout(schedTick._t);schedTick._t=setTimeout(schedTick,60000-Date.now()%60000+60)}
+
+/* ---------- toque holográfico en widgets ---------- */
+(()=>{let w=null;const set=(e)=>{const r=w.getBoundingClientRect(),px=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),py=Math.max(0,Math.min(1,(e.clientY-r.top)/r.height));
+    w.style.setProperty('--px',px.toFixed(3));w.style.setProperty('--py',py.toFixed(3));w.style.setProperty('--lx',((px-.5)*2).toFixed(3));w.style.setProperty('--ly',((py-.5)*2).toFixed(3))};
+  const off=()=>{if(!w)return;w.classList.remove('tch');['--px','--py','--lx','--ly'].forEach(k=>w.style.removeProperty(k));w=null};
+  $('#pager').addEventListener('pointerdown',e=>{const g=e.target.closest('.wg');if(!g||document.body.classList.contains('editing'))return;w=g;w.classList.add('tch');set(e)});
+  document.addEventListener('pointermove',e=>{if(w)set(e)},{passive:true});['pointerup','pointercancel'].forEach(v=>document.addEventListener(v,off))})();
+(()=>{const P=$('#parts'),C=['var(--acc)','var(--acc2)','#fff','#B6FF3B'];let h='';for(let i=0;i<16;i++){const s=(1.5+Math.random()*2.5).toFixed(1);
+  h+=`<b style="left:${(Math.random()*100).toFixed(1)}%;--s:${s}px;--c:${C[i%4]};--t:${(9+Math.random()*10).toFixed(1)}s;--d:${(-Math.random()*18).toFixed(1)}s;--dx:${((Math.random()-.5)*80).toFixed(0)}px;--o:${(.35+Math.random()*.5).toFixed(2)}"></b>`}P.innerHTML=h})();
 
 /* ---------- búsqueda ---------- */
 (()=>{const b=$('#srch');let lt=null,long=false;b.addEventListener('pointerdown',()=>{long=false;lt=setTimeout(()=>{long=true;hap('long');jvOpen(true)},450)});
