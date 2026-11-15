@@ -1113,6 +1113,57 @@ public class MainActivity extends Activity {
             });
         }
 
+        /* ---------- Aura: pantalla completa y fondo ---------- */
+        @JavascriptInterface
+        public String edgeToEdge() {
+            final float d = getResources().getDisplayMetrics().density;
+            runOnUiThread(() -> {
+                try {
+                    Window w = getWindow();
+                    if (Build.VERSION.SDK_INT >= 30) w.setDecorFitsSystemWindows(false);
+                    else w.getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+                    w.setStatusBarColor(Color.TRANSPARENT);
+                    w.setNavigationBarColor(Color.TRANSPARENT);
+                    if (Build.VERSION.SDK_INT >= 29) { w.setNavigationBarContrastEnforced(false); w.setStatusBarContrastEnforced(false); }
+                    View dv = w.getDecorView();
+                    dv.setSystemUiVisibility(dv.getSystemUiVisibility() & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR & ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+                    web.setOnApplyWindowInsetsListener((v, ins) -> {
+                        int top = ins.getSystemWindowInsetTop(), bot = ins.getSystemWindowInsetBottom();
+                        js("window.onInsets&&window.onInsets(" + Math.round(top / d) + "," + Math.round(bot / d) + ")");
+                        return ins;
+                    });
+                    web.requestApplyInsets();
+                } catch (Exception ignored) { }
+            });
+            int sb = 0, nb = 0;
+            int id = getResources().getIdentifier("status_bar_height", "dimen", "android");
+            if (id > 0) sb = getResources().getDimensionPixelSize(id);
+            int id2 = getResources().getIdentifier("navigation_bar_height", "dimen", "android");
+            boolean buttons = Settings.Global.getInt(getContentResolver(), "force_fsg_nav_bar", 0) == 0;
+            if (id2 > 0 && buttons) nb = getResources().getDimensionPixelSize(id2);
+            return "{\"top\":" + Math.round(sb / d) + ",\"bottom\":" + Math.round(nb / d) + "}";
+        }
+
+        /** Aplica una imagen (data URL) como fondo del sistema: 1=inicio, 2=bloqueo, 3=ambos */
+        @JavascriptInterface
+        public void setWallpaper(String dataUrl, int which) {
+            bg.execute(() -> {
+                boolean ok = false;
+                try {
+                    String b64 = dataUrl.substring(dataUrl.indexOf(',') + 1);
+                    byte[] bytes = Base64.decode(b64, Base64.DEFAULT);
+                    Bitmap bmp = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    android.app.WallpaperManager wm = android.app.WallpaperManager.getInstance(MainActivity.this);
+                    int flags = 0;
+                    if ((which & 1) != 0) flags |= android.app.WallpaperManager.FLAG_SYSTEM;
+                    if ((which & 2) != 0) flags |= android.app.WallpaperManager.FLAG_LOCK;
+                    wm.setBitmap(bmp, null, true, flags);
+                    ok = true;
+                } catch (Exception ignored) { }
+                js("window.onWallpaperSet&&window.onWallpaperSet(" + ok + ")");
+            });
+        }
+
         /* ---------- JARVIS ---------- */
         @JavascriptInterface public boolean jvAvailable() { return true; }
 

@@ -3,7 +3,7 @@ name: Publicar versión web
 on:
   push:
     branches: [main]
-    paths: ['web/**', 'web27/**', '.github/workflows/pages.yml']
+    paths: ['web/**', 'web27/**', 'webaura/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -30,6 +30,8 @@ jobs:
           cp -r web/. site/
           mkdir -p site/ios27
           cp -r web27/. site/ios27/
+          mkdir -p site/aura
+          cp -r webaura/. site/aura/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site

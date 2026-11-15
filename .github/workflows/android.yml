@@ -25,13 +25,14 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleKustomRelease assembleIos27Release --no-daemon --stacktrace
+          ./gradlew assembleKustomRelease assembleIos27Release assembleAuraRelease --no-daemon --stacktrace
 
       - name: Renombrar APK
         run: |
           mkdir -p out
           cp android/app/build/outputs/apk/kustom/release/app-kustom-release.apk out/Launcher-CY.apk
           cp android/app/build/outputs/apk/ios27/release/app-ios27-release.apk out/Launcher-27.apk
+          cp android/app/build/outputs/apk/aura/release/app-aura-release.apk out/Aura.apk
           ls -la out
 
       - uses: actions/upload-artifact@v4
@@ -43,13 +44,15 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.6.${{ github.run_number }}
-          name: Launchers v1.6.${{ github.run_number }}
+          tag_name: v1.7.${{ github.run_number }}
+          name: Launchers v1.7.${{ github.run_number }}
           make_latest: true
           files: |
             out/Launcher-CY.apk
             out/Launcher-27.apk
+            out/Aura.apk
           body: |
+            - **Aura.apk**: estilo HyperOS 3 con fondos vibrantes, widgets de vidrio, brillo, inclinación y carpetas líquidas.
             - **Launcher-27.apk**: tema estilo iOS 27 (reloj gigante, mapa, música con letras, calendario).
             - **Launcher-CY.apk**: tema estilo KLWP (cabecera negra con esquina doblada).
 

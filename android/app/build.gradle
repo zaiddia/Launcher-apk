@@ -13,7 +13,7 @@ android {
         minSdk 26
         targetSdk 34
         versionCode runNumber
-        versionName "1.6.${runNumber}"
+        versionName "1.7.${runNumber}"
     }
 
     // Llave de firma fija para que cada APK nuevo se instale como actualización.
@@ -49,12 +49,18 @@ android {
             applicationId 'com.cy.launcher27'
             resValue 'string', 'app_name', 'Launcher 27'
         }
+        aura {
+            dimension 'theme'
+            applicationId 'com.cy.aura'
+            resValue 'string', 'app_name', 'Aura'
+        }
     }
 
     // La interfaz de cada tema se toma de su carpeta del repositorio.
     sourceSets {
         kustom { assets.srcDirs = ['../../web'] }
         ios27 { assets.srcDirs = ['../../web27'] }
+        aura { assets.srcDirs = ['../../webaura'] }
     }
 
     buildFeatures {
