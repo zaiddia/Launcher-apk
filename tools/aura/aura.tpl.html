@@ -239,6 +239,7 @@ __JV_CSS__
 <div id="dockpad"></div>
 <main id="home">
   <div id="pager"></div>
+  <div id="hudBot"></div>
   <div id="dots"></div>
   <button id="srch"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg><span id="srchT">Buscar</span><span class="orb" id="jvb"></span></button>
   <div id="dock"></div>
@@ -307,11 +308,11 @@ for(const k in L){L[k].news=L[k].newsT}
 const KEY='aura.v1';
 const NEO=[['#00F0FF','#FF2BD6'],['#22D3EE','#3B82F6'],['#A78BFA','#EC4899'],['#34D399','#06B6D4'],['#FBBF24','#F97316'],['#F472B6','#8B5CF6'],['#A3E635','#10B981'],['#60A5FA','#6366F1'],['#FB7185','#F43F5E']];
 const COLORS=NEO.map(x=>x[0]);
-const DEF={v:3,skin:'hud',hudc:'orange',boot:true,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
+const DEF={v:4,skin:'hud',hudc:'matrix',boot:true,shadow:true,permAsked:false,hfx:true,lang:null,name:'',wall:'holo',neo:0,style:'neo',acc:'#00F0FF',trans:'holo',labels:true,liquid:true,glow:true,tilt:true,isz:58,cols:4,
   w:{clock:true,wx:true,music:true,bat:true,ev:true},pages:null,dock:null,folders:{},hidden:[],labels2:{},gc:{},page:0,
   wxLoc:null,wx:null,unit:'C',h24:true,events:[],calSync:false,feedOn:true,feedTopic:0,homeAsked:false,gAsked:false,jvTalk:true,jvProv:'',jvKey:'',jvModel:'',jvVoice:''};
 let S;try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch(e){S=Object.assign({},DEF)}
-if((S.v|0)<3){S.v=3;S.skin='hud';S.hudc='orange';S.boot=true;S.wall='cyber';S.neo=0;S.trans='holo';S.hfx=true;try{Object.keys(localStorage).filter(x=>x.startsWith('wall:')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
+if((S.v|0)<4){S.v=4;S.skin='hud';S.hudc='matrix';S.shadow=true;S.boot=true;S.wall='cyber';S.neo=0;S.trans='holo';S.hfx=true;try{Object.keys(localStorage).filter(x=>x.startsWith('wall:')).forEach(x=>localStorage.removeItem(x))}catch(e){}}
 if(!S.lang){const n=(navigator.language||'es').slice(0,2);S.lang=L[n]?n:'es'}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const T=()=>L[S.lang]||L.es;
@@ -423,8 +424,8 @@ function updClockW(){const d=new Date(),m=$('#wcm');if(m)m.setAttribute('stroke-
 
 /* ---------- páginas ---------- */
 let POS=0;
-function pagesCount(){return Math.max(1,S.pages.length+OFF())}
-function renderHome(anim){const pg=$('#pager');let h='';const off=OFF(),hud=HUDON();for(let vi=0;vi<S.pages.length+off;vi++){const items=vi<off?null:S.pages[vi-off];h+=`<div class="page" data-pi="${vi}">${hud?hudPanels(vi):widgetsFor(vi)}${items?`<div class="grid" data-c="p${vi-off}">${items.map((id,k)=>iconHTML(id,k)).join('')}</div>`:''}</div>`}
+function pagesCount(){return Math.max(1,VP().length)}
+function renderHome(anim){const pg=$('#pager');let h='';const hud=HUDON();VP().forEach((v,vi)=>{const items=v.pi>=0?S.pages[v.pi]:null;h+=`<div class="page${hud?' k-'+v.k:''}" data-pi="${vi}">${hud?hudPanels(v):widgetsFor(vi)}${items?`<div class="grid" data-c="p${v.pi}">${items.map((id,k)=>iconHTML(id,k)).join('')}</div>`:''}${hud&&v.k==='class'?hudClassTail():''}</div>`});
   pg.innerHTML=h;$('#dock').style.setProperty('--dn',Math.max(1,S.dock.length));$('#dock').innerHTML=S.dock.map((id,k)=>iconHTML(id,k)).join('');$('#dock').dataset.c='dock';
   renderDots();if((S.page|0)>=pagesCount())S.page=pagesCount()-1;layoutPages(S.page|0);updClockW();if(hud){frames(pg);hudUpdate();hudFit();hudCenterDrum();document.fonts&&document.fonts.ready.then(()=>{frames(pg);hudFit()})}else $$('#pager .page').forEach(p=>p.style.zoom='');if(anim)animIn()}
 function animIn(){const p=$(`.page[data-pi="${S.page|0}"]`);if(!p)return;let k=0;p.querySelectorAll('.wg,.ai').forEach(el=>el.style.setProperty('--k',k++));p.classList.remove('in');void p.offsetWidth;p.classList.add('in');clearTimeout(animIn._t);animIn._t=setTimeout(()=>p.classList.remove('in'),1200)}
@@ -436,7 +437,7 @@ function layoutPages(pos){POS=pos;const W=$('#pager').clientWidth||innerWidth;$$
     else if(S.trans==='depth'){if(d<0){tr=`translateX(${d*W}px)`;el.style.opacity=1}else{tr=`translateX(${d*W*.25}px) scale(${1-d*.18})`;el.style.opacity=Math.max(0,1-d)}el.style.transformOrigin='50% 50%'}
     else{tr=`translateX(${d*W}px)`;el.style.opacity=1}
     el.style.transform=tr;el.style.zIndex=d<=0?2:1});
-  $$('#dots i:not(.fd)').forEach((d,i)=>d.classList.toggle('on',i===Math.round(pos)))}
+  $$('#dots i:not(.fd)').forEach((d,i)=>d.classList.toggle('on',i===Math.round(pos)));if(typeof hudOnPage==='function'&&Number.isInteger(pos))hudOnPage(pos)}
 function goPage(i,anim=true){i=Math.max(0,Math.min(pagesCount()-1,i));const from=POS;S.page=i;save();
   if(!anim){layoutPages(i);return}const t0=performance.now(),dur=380;cancelAnimationFrame(goPage._r);
   const st=n=>{const k=Math.min(1,(n-t0)/dur),e=1-Math.pow(1-k,3);layoutPages(from+(i-from)*e);if(k<1)goPage._r=requestAnimationFrame(st);else{layoutPages(i);if(Math.round(from)!==i)animIn()}};goPage._r=requestAnimationFrame(st)}
@@ -503,11 +504,11 @@ function dragEnd(e){const id=DRAG.id,hov=DRAG.hover,folder=hov&&hov.classList.co
       else{const fid='f'+Date.now().toString(36);S.folders[fid]={name:T().folder,apps:[tid.replace(/^p:/,''),id.replace(/^p:/,'')]};const t2=locate(tid);t2.arr[t2.k]='f:'+fid}hap('long')}
     else{from.arr.splice(from.k,1);const t2=locate(hov.dataset.id);const pos=t2.k+(from.arr===t2.arr&&from.k<=t2.k?1:0);t2.arr.splice(pos,0,id)}}
   else if(inDock){if(from.arr!==S.dock&&S.dock.length>=5){toast('Dock: 5 máx.');return}from.arr.splice(from.k,1);S.dock.push(id)}
-  else{const page=S.pages[Math.max(0,(S.page|0)-OFF())];from.arr.splice(from.k,1);page.push(id)}
+  else{const vv=VP()[S.page|0];const page=S.pages[vv&&vv.pi>=0?vv.pi:0];from.arr.splice(from.k,1);page.push(id)}
   save();renderHome()}
 function pickToHome(){const t=T(),L0=installed();sheet(`<h3>${esc(t.pickApps)}</h3><div class="pick">${L0.map(a=>iconHTML('p:'+a.p,0).replace('class="ai"','class="ai" data-pick="1"')).join('')}</div>`);
   $('#sheetIn').onclick=e=>{const b=e.target.closest('.ai');if(!b)return;addToHome(b.dataset.id);b.style.opacity=.35}}
-function addToHome(id){if(locate(id)){toast(T().added);return}let pg=S.pages.find((p,i)=>p.length<(i===0||(HUDON()&&i===1)?8:24));if(!pg){pg=[];S.pages.push(pg);toast(T().full)}else toast(T().added);pg.push(id);save();renderHome()}
+function addToHome(id){if(locate(id)){toast(T().added);return}let pg=S.pages.find((p,i)=>p.length<(i===0?8:HUDON()?16:24));if(!pg){pg=[];S.pages.push(pg);toast(T().full)}else toast(T().added);pg.push(id);save();renderHome()}
 
 /* ---------- carpeta líquida ---------- */
 let OPENF=null;
@@ -607,8 +608,8 @@ function homeSettings(){const t=T(),sw=(k,l,s,path)=>`<div class="row"><span>${e
   <div class="row"><span>${esc(t.cols)}</span><div class="seg">${[4,5].map(v=>`<button data-co="${v}" class="${S.cols===v?'on':''}">${v}</button>`).join('')}</div></div></div>
   <div class="grp" style="margin-top:14px"><button class="row link" id="regen" style="width:100%">${esc(t.regen)}</button><button class="row link" id="moreS" style="width:100%">${esc(t.more)}<span>›</span></button></div>`);
   const I2=$('#sheetIn');
-  I2.querySelectorAll('[data-sk]').forEach(b=>b.onclick=async()=>{S.skin=b.dataset.sk;if(S.skin==='hud'&&S.wall!=='photo')S.wall='cyber';else if(S.skin==='holo'&&S.wall==='cyber')S.wall='holo';S.page=0;save();applyTheme();await applyWall();renderHome(true);homeSettings();if(S.skin==='hud')hudBoot()});
-  I2.querySelectorAll('[data-hc]').forEach(b=>b.onclick=()=>{S.hudc=b.dataset.hc;save();applyTheme();renderHome();homeSettings()});
+  I2.querySelectorAll('[data-sk]').forEach(b=>b.onclick=async()=>{S.skin=b.dataset.sk;if(S.skin==='hud'&&S.wall!=='photo')S.wall='cyber';else if(S.skin==='holo'&&S.wall==='cyber')S.wall='holo';S.page=0;save();applyTheme();await applyWall();renderHome(true);HK='';hudBottom();homeSettings();if(S.skin==='hud')hudBoot(true)});
+  I2.querySelectorAll('[data-hc]').forEach(b=>b.onclick=()=>{S.hudc=b.dataset.hc;save();applyTheme();hudRe();homeSettings()});
   I2.querySelectorAll('[data-k]').forEach(b=>b.onclick=()=>{const k=b.dataset.k,pth=b.dataset.path;if(pth)S[pth][k]=!S[pth][k];else S[k]=!S[k];save();hap('tick');b.classList.toggle('on');applyTheme();if(pth)renderHome()});
   I2.querySelectorAll('[data-tr]').forEach(b=>b.onclick=()=>{S.trans=b.dataset.tr;save();I2.querySelectorAll('[data-tr]').forEach(x=>x.classList.toggle('on',x===b));const n=pagesCount();if(n>1){const p=S.page|0;goPage(p===0?1:0);setTimeout(()=>goPage(p),600)}});
   I2.querySelectorAll('[data-is]').forEach(b=>b.onclick=()=>{S.isz=+b.dataset.is;save();applyTheme();homeSettings()});
@@ -629,7 +630,7 @@ function moreSettings(){const t=T();
   <div class="grp" style="margin-top:14px">
   ${NATIVE?`<button class="row link" id="hmB" style="width:100%">${esc(t.setHome)}<span>›</span></button><button class="row link" id="gsB" style="width:100%">${esc(t.gestures)}<span>›</span></button><button class="row link" id="maB" style="width:100%">${esc(t.musicAcc)}<span>›</span></button>`:''}
   <button class="row link" id="jvS" style="width:100%">J.A.R.V.I.S.<span>›</span></button></div>
-  <p style="font-size:11px;color:#8F99A9;margin-top:16px;text-align:center">Aura · v1.8 · ${NATIVE?'APK':'Web'}</p>`);
+  <p style="font-size:11px;color:#8F99A9;margin-top:16px;text-align:center">Aura · v1.7 · ${NATIVE?'APK':'Web'}</p>`);
   $('#sN').oninput=e=>{S.name=e.target.value;save()};$('#locB').onclick=citySheet;$('#s24').onclick=()=>{S.h24=!S.h24;save();renderHome();moreSettings()};
   $$('#sheetIn [data-u]').forEach(b=>b.onclick=()=>{S.unit=b.dataset.u;save();loadWx(true);moreSettings()});
   $('#sFd').onclick=()=>{S.feedOn=!S.feedOn;save();renderDots();moreSettings()};
@@ -662,7 +663,7 @@ function pollMedia(){if(!has('nowPlaying'))return;try{const j=JSON.parse(Android
 window.onMediaChanged=pollMedia;
 function cmd(c){if(has('mediaCmd')){Android.mediaCmd(c,0);setTimeout(pollMedia,350)}}
 function renderQuick(){}function renderCal(){}function renderWidgets(){refreshWidgets()}
-function go(tab){if(tab==='apps')openDrawer();else if(tab==='music'||tab==='cal')goPage(1);else goPage(0)}
+function go(tab){if(HUDON()&&tab!=='apps'){hudGo(tab==='music'?'media':tab==='cal'?'class':'main');return}if(tab==='apps')openDrawer();else if(tab==='music'||tab==='cal')goPage(1);else goPage(0)}
 let NEV=[],NEVt=0;
 const mapNEV=json=>{try{return JSON.parse(json).map(e=>{const b=new Date(e.b),en=new Date(e.e);const d=e.a?new Date(b.getUTCFullYear(),b.getUTCMonth(),b.getUTCDate()):b;return{id:'n'+e.id+'_'+e.b,title:e.t||'—',date:ymd(d),start:e.a?'':pad(b.getHours())+':'+pad(b.getMinutes()),end:e.a?'':pad(en.getHours())+':'+pad(en.getMinutes()),native:true}})}catch(x){return[]}};
 window.onCalendarEvents=json=>{NEV=mapNEV(json);NEVt=Date.now();refreshWidgets()};window.onCalendarPermission=()=>refreshNEV(true);
@@ -699,12 +700,12 @@ __HUD_JS__
 /* ---------- arranque ---------- */
 window.onAndroidBack=()=>{if(document.body.classList.contains('sheetOpen'))closeSheet();else if(JV.on)jvClose();else if($('#ctx').classList.contains('on'))closeCtx();else if(OPENF)closeFolder();else if(document.body.classList.contains('feedOpen'))closeFeed();
   else if(document.body.classList.contains('drawerOpen'))closeDrawer();else if(document.body.classList.contains('editing'))endEdit(true);else if((S.page|0)!==0)goPage(0)};
-window.onAndroidHome=()=>{if(JV.on){jvClose();return}if(document.body.classList.contains('sheetOpen'))closeSheet();closeCtx();if(OPENF)closeFolder();if(document.body.classList.contains('feedOpen'))closeFeed();
+window.onAndroidHome=()=>{if(HUDON()&&!document.body.classList.contains('drawerOpen')&&!JV.on&&!document.body.classList.contains('sheetOpen')&&!OPENF&&!document.body.classList.contains('feedOpen')&&!document.body.classList.contains('editing')&&(VP()[S.page|0]||{}).k!=='main'){hudGo('main');return}if(JV.on){jvClose();return}if(document.body.classList.contains('sheetOpen'))closeSheet();closeCtx();if(OPENF)closeFolder();if(document.body.classList.contains('feedOpen'))closeFeed();
   if(document.body.classList.contains('drawerOpen')){closeDrawer();return}if(document.body.classList.contains('editing')){endEdit(true);return}if((S.page|0)!==0)goPage(0);else animIn()};
-window.onAndroidResume=()=>{hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
+window.onAndroidResume=()=>{sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
 window.addEventListener('resize',()=>layoutPages(S.page|0));
 if(!S.pages||!S.dock)defaultLayout();cleanLayout();
-applyTheme();applyWall();renderHome(true);schedTick();hudBoot();hudTick();if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
+applyTheme();applyWall();renderHome(true);schedTick();hudBottom();hudBoot();hudTick();hudFirstRun();sampleComm();if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
 if(NATIVE){nativeDev();setInterval(()=>{if(!document.hidden&&(S.page|0)===1){nativeDev();refreshWidgets()}},30000)}
 pollMedia();refreshNEV(true);if(S.wxLoc)loadWx(false);else setTimeout(()=>geoLocate(true),1500);
 if(NATIVE&&has('gestureStatus')&&!S.gAsked){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}

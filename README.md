@@ -53,7 +53,14 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
-### Aura v1.8: estilo Hacker HUD (nuevo, predeterminado)
+### Aura v1.9: Hacker HUD de una sola pantalla (nuevo)
+- Funciona como el tema original: la **base es fija** (ACCESS / LOGIN, tarjeta del día, reloj hora·min·seg de colores y SYSTEM INFORMATION) y el **panel central cambia** con animación de carga + terminal.
+- **ACCESS** → Media (casete, volumen, noticias con miniaturas) · **LOGIN** → CLASSIFIED (calendario, búsqueda, apps) · cuadro gris → **SETTINGS**. Al estar activo, el botón dice **ONLINE**.
+- **SETTINGS**: núcleo de color + ELEMENTS (Matrix verde/crema, Shadow rojo/lima, Stark, Cyber, Nebula), fondos + galería protegida, efectos (estado, luz y sombra, arranque), permisos y más ajustes.
+- Tarjeta del día con datos reales: notificaciones, llamadas perdidas, SMS sin leer, Wi-Fi; avatar = J.A.R.V.I.S. (mantener = cámara).
+- **Centro de permisos**: ubicación, calendario, micrófono, contactos, teléfono, registro de llamadas, SMS, acceso a notificaciones, app de inicio y gestos (se abre solo la primera vez).
+
+### Aura v1.8: estilo Hacker HUD
 - Recreado del tema "Hacker / Stark Industries": marcos HUD naranjas con esquinas cortadas sobre niebla turquesa.
 - **Principal**: cobertura global (mapa mundial con radar en tu ubicación, clima y coordenadas), celdas de **energía** brillantes según tu batería (se animan al cargar), diagnóstico real del sistema (CPU, MHz, temperatura, autonomía, RAM, almacenamiento, fecha), botones **ACCESS** (cajón) y **ONLINE** (J.A.R.V.I.S.), tarjeta con núcleo animado.
 - **CLASSIFIED**: barra de carga, calendario tipo tambor deslizable, BUSCAR APPS, núcleo con cable y tus apps en cajas azules.

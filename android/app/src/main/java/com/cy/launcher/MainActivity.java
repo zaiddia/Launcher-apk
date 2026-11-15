@@ -102,6 +102,16 @@ import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends Activity {
+    static volatile MainActivity act;
+    private static final int REQ_ALL = 31;
+    private long lastNotifPush = 0;
+    void notifChanged() {
+        long now = SystemClock.uptimeMillis();
+        if (now - lastNotifPush < 400) return;
+        lastNotifPush = now;
+        js("window.onNotif&&window.onNotif(" + MediaListener.count(getPackageName()) + ")");
+    }
+
 
     private static final String HOST = "appassets.androidplatform.net";
     private static final String START_URL = "https://" + HOST + "/assets/index.html";
@@ -146,6 +156,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        act = this;
         Window w = getWindow();
         w.setStatusBarColor(0xFF0F0F10);
         w.setNavigationBarColor(0xFF0F0F10);
@@ -266,6 +277,9 @@ public class MainActivity extends Activity {
         }
         if (requestCode == REQ_CONTACTS || requestCode == REQ_CALL) {
             js("window.onJvPerm&&window.onJvPerm(" + (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) + ")");
+        }
+        if (requestCode == REQ_ALL) {
+            js("window.onPerms&&window.onPerms()");
         }
         if (requestCode == REQ_CAL) {
             js("window.onCalendarPermission&&window.onCalendarPermission()");
@@ -547,6 +561,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (act == this) act = null;
         try { if (stt != null) stt.destroy(); } catch (Exception ignored) { }
         try { if (tts != null) tts.shutdown(); } catch (Exception ignored) { }
         try { unregisterReceiver(pkgReceiver); } catch (Exception ignored) { }
@@ -1491,6 +1506,118 @@ public class MainActivity extends Activity {
         }
 
         /* ---------- Música del sistema (Spotify, YouTube Music, etc.) ---------- */
+        /* ---------- permisos y datos del tema hacker ---------- */
+        private boolean granted(String p) { return checkSelfPermission(p) == PackageManager.PERMISSION_GRANTED; }
+
+        @JavascriptInterface
+        public String permStatus() {
+            JSONObject o = new JSONObject();
+            try {
+                o.put("location", hasLocation());
+                o.put("calendar", granted(Manifest.permission.READ_CALENDAR));
+                o.put("mic", granted(Manifest.permission.RECORD_AUDIO));
+                o.put("contacts", granted(Manifest.permission.READ_CONTACTS));
+                o.put("phone", granted(Manifest.permission.CALL_PHONE));
+                o.put("calllog", granted(Manifest.permission.READ_CALL_LOG));
+                o.put("sms", granted(Manifest.permission.READ_SMS));
+                o.put("notif", hasMediaAccess());
+                o.put("home", isDefaultLauncher());
+                o.put("gestures", GestureService.instance != null);
+            } catch (Exception ignored) { }
+            return o.toString();
+        }
+
+        @JavascriptInterface
+        public void requestPerms(String csv) {
+            java.util.ArrayList<String> want = new java.util.ArrayList<>();
+            for (String k : csv.split(",")) {
+                switch (k.trim()) {
+                    case "location": want.add(Manifest.permission.ACCESS_FINE_LOCATION); want.add(Manifest.permission.ACCESS_COARSE_LOCATION); break;
+                    case "calendar": want.add(Manifest.permission.READ_CALENDAR); break;
+                    case "mic": want.add(Manifest.permission.RECORD_AUDIO); break;
+                    case "contacts": want.add(Manifest.permission.READ_CONTACTS); break;
+                    case "phone": want.add(Manifest.permission.CALL_PHONE); break;
+                    case "calllog": want.add(Manifest.permission.READ_CALL_LOG); break;
+                    case "sms": want.add(Manifest.permission.READ_SMS); break;
+                }
+            }
+            java.util.ArrayList<String> miss = new java.util.ArrayList<>();
+            for (String p : want) if (!granted(p)) miss.add(p);
+            if (miss.isEmpty()) { js("window.onPerms&&window.onPerms()"); return; }
+            runOnUiThread(() -> requestPermissions(miss.toArray(new String[0]), REQ_ALL));
+        }
+
+        @JavascriptInterface
+        public int notifCount() { return MediaListener.count(getPackageName()); }
+
+        @JavascriptInterface
+        public int missedCalls() {
+            if (!granted(Manifest.permission.READ_CALL_LOG)) return -1;
+            try (Cursor c = getContentResolver().query(android.provider.CallLog.Calls.CONTENT_URI, new String[]{android.provider.CallLog.Calls._ID},
+                    android.provider.CallLog.Calls.TYPE + "=? AND " + android.provider.CallLog.Calls.NEW + "=1",
+                    new String[]{String.valueOf(android.provider.CallLog.Calls.MISSED_TYPE)}, null)) {
+                return c == null ? 0 : c.getCount();
+            } catch (Exception e) { return -1; }
+        }
+
+        @JavascriptInterface
+        public int unreadSms() {
+            if (!granted(Manifest.permission.READ_SMS)) return -1;
+            try (Cursor c = getContentResolver().query(Uri.parse("content://sms/inbox"), new String[]{"_id"}, "read=0", null, null)) {
+                return c == null ? 0 : c.getCount();
+            } catch (Exception e) { return -1; }
+        }
+
+        @JavascriptInterface
+        public String netInfo() {
+            JSONObject o = new JSONObject();
+            try {
+                android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                android.net.NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
+                String type = "none";
+                if (nc != null) {
+                    if (nc.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI)) type = "wifi";
+                    else if (nc.hasTransport(android.net.NetworkCapabilities.TRANSPORT_CELLULAR)) type = "mobile";
+                    else type = "other";
+                }
+                o.put("type", type);
+                String ssid = "";
+                if ("wifi".equals(type) && hasLocation()) {
+                    try {
+                        android.net.wifi.WifiManager wm = (android.net.wifi.WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                        android.net.wifi.WifiInfo wi = wm.getConnectionInfo();
+                        if (wi != null && wi.getSSID() != null) ssid = wi.getSSID().replace("\"", "");
+                        if ("<unknown ssid>".equals(ssid)) ssid = "";
+                    } catch (Exception ignored) { }
+                }
+                o.put("ssid", ssid);
+            } catch (Exception ignored) { }
+            return o.toString();
+        }
+
+        @JavascriptInterface
+        public void openCallLog() {
+            runOnUiThread(() -> {
+                try { startActivity(new Intent(Intent.ACTION_VIEW, android.provider.CallLog.Calls.CONTENT_URI).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); }
+                catch (Exception e) { try { startActivity(new Intent(Intent.ACTION_DIAL).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { } }
+            });
+        }
+
+        @JavascriptInterface
+        public void openSms() {
+            runOnUiThread(() -> {
+                try { startActivity(Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MESSAGING).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { }
+            });
+        }
+
+        @JavascriptInterface
+        public void openNetSettings() {
+            runOnUiThread(() -> {
+                try { startActivity(new Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); }
+                catch (Exception e) { try { startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); } catch (Exception ignored) { } }
+            });
+        }
+
         @JavascriptInterface
         public boolean hasMediaAccess() {
             String f = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
