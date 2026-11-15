@@ -205,19 +205,56 @@ async function hudSet(b){const a=b.dataset.s,K=Object.keys(HUDC);
 function hudRe(){const p=S.page|0;renderHome();goPage(p,false);HK='';hudOnPage(p)}
 function hudWallThumbs(){$$('.wt').forEach(b=>{if(b.style.backgroundImage)return;requestAnimationFrame(()=>{b.style.backgroundImage=`url(${genWall(b.dataset.k,72,128).toDataURL('image/jpeg',.75)})`})})}
 
-/* ---------- centro de permisos ---------- */
-function permSheet(){const h=H();let st={};try{st=has('permStatus')?JSON.parse(Android.permStatus()):{}}catch(e){}
-  const P=[['location',h.pLoc,h.pLocS],['calendar',h.pCal,h.pCalS],['mic',h.pMic,h.pMicS],['contacts',h.pCon,h.pConS],['phone',h.pPh,h.pPhS],['calllog',h.pLog,h.pLogS],['sms',h.pSms,h.pSmsS]];
-  const S2=[['notif',h.pNot,h.pNotS],['home',h.pHome,h.pHomeS],['gestures',h.pGes,h.pGesS]];
-  const row=([k,l,d],sp)=>`<div class="row"><span>${esc(l)}<small>${esc(d)}</small></span>${st[k]?'<b class="pok">✓</b>':`<button class="btn alt" data-p="${k}" style="padding:7px 12px">${esc(sp?h.open:'OK')}</button>`}</div>`;
-  sheet(`<h3><button class="x" data-x>${ic('close')}</button>${esc(h.permT)}</h3><p style="font-size:12.5px;color:#9AA4B2;text-align:center;margin:-6px 0 12px">${esc(h.permS)}</p>
-    <div class="grp">${P.map(r=>row(r)).join('')}</div><div class="grp" style="margin-top:12px">${S2.map(r=>row(r,1)).join('')}</div>
-    <button class="btn" id="pAll" style="width:100%;margin-top:14px">${esc(h.grantAll)}</button>`);
-  $('#pAll').onclick=()=>{if(has('requestPerms'))Android.requestPerms(P.map(x=>x[0]).join(','));else toast('APK')};
-  $('#sheetIn').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;const k=b.dataset.p;
-    if(k==='notif')Android.requestMediaAccess();else if(k==='home')Android.setDefaultLauncher();else if(k==='gestures')gestureSheet();else if(has('requestPerms'))Android.requestPerms(k)}}
-window.onPerms=()=>{sampleComm();hudCard();if(document.body.classList.contains('sheetOpen')&&$('#pAll'))permSheet();if(S.wxLoc==null)geoLocate(true)};
-
+/* ---------- centro de permisos (nativo) ---------- */
+const PT={es:{t:'Permisos y sistema',s:'Todo se concede con los diálogos y ajustes de Android. «Configurar todo» los recorre uno por uno y continúa solo al volver.',
+  all:'Configurar todo automáticamente',run:'Permisos de Android',sp:'Ajustes especiales',xi:'Optimización de HyperOS',keep:'Mantener activo',keepS:'Servicio persistente con notificación mínima: HyperOS no cierra el launcher y abre al instante',
+  adb:'Activación total por ADB (opcional)',adbS:'Conecta el celular al PC con depuración USB y ejecuta una vez este comando. Después Aura activa sola las notificaciones y los gestos:',copy:'Copiar',copied:'Copiado',
+  step:(i,n)=>`Paso ${i} de ${n}`,done:'Listo: todo configurado',open:'Abrir',ok:'Conceder',
+  pNotif:'Notificaciones',pNotifS:'Para el aviso de «Mantener activo»',pBat:'Sin optimización de batería',pBatS:'Android no pausa el launcher',
+  pAuto:'Inicio automático',pAutoS:'Que HyperOS no cierre Aura',pMb:'Ahorro de batería: Sin restricciones',pMbS:'Busca Aura y elige «Sin restricciones»',pPop:'Ventanas en segundo plano y bloqueo',pPopS:'Abrir apps y J.A.R.V.I.S. desde segundo plano'},
+ en:{t:'Permissions & system',s:'Everything is granted through Android dialogs and settings. «Set up everything» walks through them and continues when you return.',
+  all:'Set up everything automatically',run:'Android permissions',sp:'Special settings',xi:'HyperOS optimization',keep:'Keep alive',keepS:'Persistent service with a minimal notification: HyperOS will not close the launcher',
+  adb:'Full activation via ADB (optional)',adbS:'Connect the phone to a PC with USB debugging and run this once. Then Aura enables notifications and gestures by itself:',copy:'Copy',copied:'Copied',
+  step:(i,n)=>`Step ${i} of ${n}`,done:'Done: everything is set up',open:'Open',ok:'Grant',
+  pNotif:'Notifications',pNotifS:'For the «Keep alive» notice',pBat:'No battery optimization',pBatS:'Android will not pause the launcher',
+  pAuto:'Autostart',pAutoS:'So HyperOS does not close Aura',pMb:'Battery saver: No restrictions',pMbS:'Find Aura and choose «No restrictions»',pPop:'Background windows & lock screen',pPopS:'Open apps and J.A.R.V.I.S. from background'}};
+const PTT=()=>PT[S.lang]||(S.lang==='pt'?PT.es:PT.en);
+function permState(){let st={};try{st=has('permStatus')?JSON.parse(Android.permStatus()):{}}catch(e){}S.permVisited=S.permVisited||{};return st}
+function permLists(){const h=H(),p=PTT();
+  const R=[['location',h.pLoc,h.pLocS],['calendar',h.pCal,h.pCalS],['mic',h.pMic,h.pMicS],['contacts',h.pCon,h.pConS],['phone',h.pPh,h.pPhS],['calllog',h.pLog,h.pLogS],['sms',h.pSms,h.pSmsS],['notifications',p.pNotif,p.pNotifS]];
+  const SP=[['home',h.pHome,h.pHomeS],['notif',h.pNot,h.pNotS],['gestures',h.pGes,h.pGesS],['battery',p.pBat,p.pBatS]];
+  const XI=[['autostart',p.pAuto,p.pAutoS],['miuibattery',p.pMb,p.pMbS],['popup',p.pPop,p.pPopS]];
+  return {R,SP,XI}}
+const PW={q:[],i:0,n:0,wait:false};
+function permDo(k){if(!NATIVE){toast('APK');return}PW.wait=true;
+  if(k==='runtime'){const st=permState(),{R}=permLists();Android.requestPerms(R.filter(x=>!st[x[0]]).map(x=>x[0]).join(','))}
+  else if(k==='home')Android.setDefaultLauncher();
+  else if(['notif','gestures','battery','autostart','miuibattery','popup'].includes(k)){if(['autostart','miuibattery','popup'].includes(k)){S.permVisited[k]=true;save()}
+    if(has('requestSpecial'))Android.requestSpecial(k);else if(k==='notif')Android.requestMediaAccess();else if(k==='gestures')Android.openAccessibility()}
+  else Android.requestPerms(k)}
+function permPlan(){const st=permState(),{R,SP,XI}=permLists(),q=[];if(R.some(x=>!st[x[0]]))q.push('runtime');
+  SP.forEach(x=>{if(!st[x[0]])q.push(x[0])});if(st.xiaomi)XI.forEach(x=>{if(!S.permVisited[x[0]])q.push(x[0])});return q}
+function permWizard(){if(has('autoGrant'))try{Android.autoGrant()}catch(e){}PW.q=permPlan();PW.n=PW.q.length;PW.i=0;if(!PW.n){toast(PTT().done);permSheet();return}permNext()}
+function permNext(){if(PW.i>=PW.q.length){PW.q=[];toast(PTT().done);permSheet();return}const k=PW.q[PW.i++];toast(PTT().step(PW.i,PW.n));setTimeout(()=>permDo(k),350)}
+function permBack(){if(!PW.wait)return;PW.wait=false;setTimeout(()=>{if(PW.q.length)permNext();else if(document.body.classList.contains('sheetOpen')&&$('#pAll'))permSheet()},450)}
+function permSheet(){const h=H(),p=PTT(),st=permState(),{R,SP,XI}=permLists();
+  const row=([k,l,d],btn,okv)=>`<div class="row"><span>${esc(l)}<small>${esc(d)}</small></span>${okv?'<b class="pok">✓</b>':`<button class="btn alt" data-p="${k}" style="padding:7px 12px">${esc(btn)}</button>`}</div>`;
+  const cmd='adb shell pm grant '+(has('appMode')&&JVAPP?'com.cy.jarvis':'com.cy.aura')+' android.permission.WRITE_SECURE_SETTINGS';
+  const nMiss=permPlan().length;
+  sheet(`<h3><button class="x" data-x>${ic('close')}</button>${esc(p.t)}</h3><p style="font-size:12.5px;color:#9AA4B2;text-align:center;margin:-6px 0 12px">${esc(p.s)}</p>
+    <button class="btn" id="pAll" style="width:100%;margin-bottom:6px">${esc(p.all)}${nMiss?` · ${nMiss}`:' ✓'}</button>
+    <h4>${esc(p.keep)}</h4><div class="grp"><div class="row"><span>${esc(p.keep)}<small>${esc(p.keepS)}</small></span><button class="sw ${st.keepalive?'on':''}" id="pKeep"></button></div></div>
+    <h4>${esc(p.run)}</h4><div class="grp">${R.map(r=>row(r,p.ok,st[r[0]])).join('')}</div>
+    <h4>${esc(p.sp)}</h4><div class="grp">${SP.map(r=>row(r,p.open,st[r[0]])).join('')}</div>
+    ${st.xiaomi?`<h4>${esc(p.xi)}</h4><div class="grp">${XI.map(r=>row(r,p.open,S.permVisited[r[0]])).join('')}</div>`:''}
+    <h4>${esc(p.adb)}</h4><div class="grp" style="padding:10px 14px"><small style="display:block;color:#9AA4B2;font-size:11.5px;margin-bottom:8px">${esc(p.adbS)}</small>
+      <code style="display:block;font:500 11px var(--mono);background:rgba(0,0,0,.4);padding:10px;border-radius:8px;word-break:break-all;-webkit-user-select:text;user-select:text">${esc(cmd)}</code>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><span style="font-size:12px">${st.secure?'<b class="pok">✓</b> ADB':''}</span><button class="btn alt" id="pCopy" style="padding:7px 12px">${esc(p.copy)}</button></div></div>`);
+  $('#pAll').onclick=()=>{closeSheet();permWizard()};
+  $('#pKeep').onclick=e=>{const on=!e.currentTarget.classList.contains('on');e.currentTarget.classList.toggle('on',on);hap('tick');if(has('setPersistent'))Android.setPersistent(on);if(on&&!st.notifications&&has('requestPerms')){PW.wait=true;Android.requestPerms('notifications')}};
+  $('#pCopy').onclick=async()=>{try{await navigator.clipboard.writeText(cmd);toast(p.copied)}catch(e){if(has('shareText'))Android.shareText(cmd)}};
+  $('#sheetIn').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;hap();const k=b.dataset.p;PW.q=[];permDo(k);if(['autostart','miuibattery','popup'].includes(k))b.outerHTML='<b class="pok">✓</b>'}}
+window.onPerms=()=>{sampleComm();hudCard();permBack();if(S.wxLoc==null)geoLocate(true)};
 /* ---------- arranque tipo terminal ---------- */
 const BOOTL=['[ OK ] Started Journal Service.','Mounting POSIX Message Queue File System...','[ OK ] Reached target Paths.','[ OK ] Listening on udev Kernel Socket.','Starting Create list of static device nodes...',
   '[ OK ] Listening on Device-mapper event daemon FIFOs.','Starting LVM2 metadata daemon...','[ OK ] Set up automount Arbitrary Executable File Formats.','dev-disk-by\\x2duuid-'+Math.random().toString(16).slice(2,14)+'.device',
@@ -228,5 +265,5 @@ function hudBoot(force){if(!HUDON()||(S.boot===false&&!force)||$('#boot'))return
   const step=()=>{if(!el.isConnected)return;if(i<BOOTL.length){log.textContent+=BOOTL[i++]+'\n';log.scrollTop=1e9;setTimeout(step,32+Math.random()*28)}
     else{el.querySelector('.bst').textContent=h.done;el.classList.add('ok');setTimeout(()=>{el.querySelector('.bst').textContent=h.granted},200);setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)},520)}};
   setTimeout(step,120);el.onclick=()=>{el.classList.add('out');setTimeout(()=>el.remove(),300)}}
-function hudFirstRun(){if(!HUDON()||!NATIVE||S.permAsked)return;S.permAsked=true;save();setTimeout(permSheet,3600)}
+function hudFirstRun(){if(has('autoGrant'))try{Android.autoGrant()}catch(e){}if(!NATIVE||S.permAsked)return;S.permAsked=true;save();setTimeout(permSheet,3600)}
 const _rfH=renderFeed;renderFeed=function(a){_rfH(a);if(HUDON())hudNews()};

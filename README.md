@@ -53,6 +53,12 @@ Luego activa **Ocultar botones** en la pantalla de gestos.
 - **Mantén presionada una app** (en inicio o en el cajón): accesos directos de la app, Abrir, Agregar a inicio / Cambiar ícono, Info, Notificaciones, Compartir app, Compartir enlace, Play Store, Renombrar, Ocultar y Desinstalar.
 - Las páginas siguen al dedo al deslizar; animaciones al entrar, reloj animado, zoom al abrir apps y vibración.
 
+### Aura v2.1 — siempre activo y permisos nativos
+- **Configurar todo automáticamente**: recorre los diálogos y ajustes de Android uno por uno y continúa solo al volver (permisos, app de inicio con el diálogo del sistema, acceso a notificaciones, gestos, sin optimización de batería, y en HyperOS: inicio automático, «Sin restricciones», ventanas en segundo plano).
+- **Mantener activo**: servicio persistente opcional con notificación mínima; se reactiva al encender el celular. HyperOS deja de cerrar el launcher.
+- El launcher libera memoria cuando el sistema la pide y vuelve a enlazar el lector de notificaciones si el sistema lo desconecta.
+- **ADB opcional**: `adb shell pm grant com.cy.aura android.permission.WRITE_SECURE_SETTINGS` → Aura activa solo las notificaciones y los gestos.
+
 ### Nuevo: tema de HyperOS + J.A.R.V.I.S. independiente
 - **`Aura-Hacker.mtz`**: tema de HyperOS con pantalla de bloqueo HUD animada, íconos y fondos. Guía: [theme/INSTALAR.md](theme/INSTALAR.md).
 - **`JARVIS.apk`**: J.A.R.V.I.S. como app de asistente, para usarlo con el launcher original de HyperOS.

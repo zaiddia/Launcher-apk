@@ -650,13 +650,13 @@ function moreSettings(){const t=T();
   <div class="row"><span>${esc(t.calSync)}</span><button class="sw ${S.calSync?'on':''}" id="sCal"></button></div></div>
   <div class="grp" style="margin-top:14px">
   ${NATIVE?`<button class="row link" id="hmB" style="width:100%">${esc(t.setHome)}<span>›</span></button><button class="row link" id="gsB" style="width:100%">${esc(t.gestures)}<span>›</span></button><button class="row link" id="maB" style="width:100%">${esc(t.musicAcc)}<span>›</span></button>`:''}
-  <button class="row link" id="jvS" style="width:100%">J.A.R.V.I.S.<span>›</span></button></div>
+  <button class="row link" id="jvS" style="width:100%">J.A.R.V.I.S.<span>›</span></button><button class="row link" id="pmS" style="width:100%">${esc(PTT().t)}<span>›</span></button></div>
   <p style="font-size:11px;color:#8F99A9;margin-top:16px;text-align:center">Aura · v1.7 · ${NATIVE?'APK':'Web'}</p>`);
   $('#sN').oninput=e=>{S.name=e.target.value;save()};$('#locB').onclick=citySheet;$('#s24').onclick=()=>{S.h24=!S.h24;save();renderHome();moreSettings()};
   $$('#sheetIn [data-u]').forEach(b=>b.onclick=()=>{S.unit=b.dataset.u;save();loadWx(true);moreSettings()});
   $('#sFd').onclick=()=>{S.feedOn=!S.feedOn;save();renderDots();moreSettings()};
   $('#sCal').onclick=()=>{S.calSync=!S.calSync;save();if(S.calSync&&has('hasCalendar')&&!Android.hasCalendar())Android.requestCalendar();refreshNEV(true);moreSettings()};
-  if($('#hmB'))$('#hmB').onclick=()=>Android.setDefaultLauncher();if($('#gsB'))$('#gsB').onclick=gestureSheet;if($('#maB'))$('#maB').onclick=()=>Android.requestMediaAccess();$('#jvS').onclick=jarvisSettings}
+  if($('#hmB'))$('#hmB').onclick=()=>Android.setDefaultLauncher();if($('#gsB'))$('#gsB').onclick=gestureSheet;if($('#maB'))$('#maB').onclick=()=>Android.requestMediaAccess();$('#jvS').onclick=jarvisSettings;$('#pmS').onclick=permSheet}
 
 /* ---------- clima ---------- */
 async function loadWx(force){if(!S.wxLoc){refreshWidgets();return}if(!force&&S.wx&&S.wx.u===S.unit&&S.wx.wind!=null&&Date.now()-S.wx.t<(ECO.eco?60:30)*60e3){refreshWidgets();return}
@@ -723,14 +723,14 @@ window.onAndroidBack=()=>{if(document.body.classList.contains('sheetOpen'))close
   else if(document.body.classList.contains('drawerOpen'))closeDrawer();else if(document.body.classList.contains('editing'))endEdit(true);else if((S.page|0)!==0)goPage(0)};
 window.onAndroidHome=()=>{if(HUDON()&&!document.body.classList.contains('drawerOpen')&&!JV.on&&!document.body.classList.contains('sheetOpen')&&!OPENF&&!document.body.classList.contains('feedOpen')&&!document.body.classList.contains('editing')&&(VP()[S.page|0]||{}).k!=='main'){hudGo('main');return}if(JV.on){jvClose();return}if(document.body.classList.contains('sheetOpen'))closeSheet();closeCtx();if(OPENF)closeFolder();if(document.body.classList.contains('feedOpen'))closeFeed();
   if(document.body.classList.contains('drawerOpen')){closeDrawer();return}if(document.body.classList.contains('editing')){endEdit(true);return}if((S.page|0)!==0)goPage(0);else animIn()};
-window.onAndroidResume=()=>{ecoWake();ecoCheck();sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
+window.onAndroidResume=()=>{ecoWake();ecoCheck();if(has('autoGrant'))try{Android.autoGrant()}catch(e){}if(typeof permBack==='function')permBack();sampleComm();hudCard();hudTick();renderGCard();schedTick();refreshLive();animIn();tiltSetup()};
 window.addEventListener('resize',()=>layoutPages(S.page|0));
 if(!S.pages||!S.dock)defaultLayout();cleanLayout();
 applyTheme();applyWall();renderHome(true);schedTick();hudBottom();if(!JVAPP){hudBoot();hudFirstRun()}hudTick();sampleComm();ecoWake();setTimeout(ecoCheck,1500);(window.requestIdleCallback||setTimeout)(()=>{try{renderDrawer()}catch(e){}},{timeout:1500});if(HUDON()&&S.feedOn&&NATIVE)setTimeout(()=>loadFeed(false),2500);
 if(NATIVE){nativeDev();setInterval(()=>{if(!document.hidden&&(S.page|0)===1){nativeDev();refreshWidgets()}},30000)}
 pollMedia();refreshNEV(true);if(S.wxLoc)loadWx(false);else setTimeout(()=>geoLocate(true),1500);
 if(NATIVE&&has('gestureStatus')&&!S.gAsked&&!JVAPP){try{Android.setGestureConfig(JSON.stringify({mode:'transparent',pill:true}))}catch(e){}}
-if(NATIVE&&!S.homeAsked&&!JVAPP){S.homeAsked=true;save();try{if(!Android.isDefaultLauncher())setTimeout(()=>{const t=T();sheet(`<h3>Aura</h3><p style="font-size:14px;margin-bottom:14px;text-align:center">${esc(t.homeHint)}</p><div style="display:flex;gap:10px"><button class="btn alt" data-x style="flex:1">${esc(t.cancel)}</button><button class="btn" id="hm2" style="flex:1">OK</button></div>`);$('#hm2').onclick=()=>{closeSheet();Android.setDefaultLauncher()}},1500)}catch(e){}}
+if(NATIVE&&!S.homeAsked&&!JVAPP&&S.permAsked){S.homeAsked=true;save();try{if(!Android.isDefaultLauncher())setTimeout(()=>{const t=T();sheet(`<h3>Aura</h3><p style="font-size:14px;margin-bottom:14px;text-align:center">${esc(t.homeHint)}</p><div style="display:flex;gap:10px"><button class="btn alt" data-x style="flex:1">${esc(t.cancel)}</button><button class="btn" id="hm2" style="flex:1">OK</button></div>`);$('#hm2').onclick=()=>{closeSheet();Android.setDefaultLauncher()}},1500)}catch(e){}}
 else if(NATIVE&&!S.gAsked&&!JVAPP){S.gAsked=true;save();try{const g=gStatus();if(g&&!g.service)setTimeout(gestureSheet,1500)}catch(e){}}
 $('#eAdd').innerHTML=ic('plus');$('#eSet').innerHTML=ic('sliders');$('#srchT').textContent=T().search;$('#eCancel').textContent=T().cancel;$('#eDone').textContent=T().done;
 

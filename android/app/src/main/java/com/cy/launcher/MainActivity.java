@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
             js("window.onPowerSave&&window.onPowerSave(" + on + ")");
         }
     };
-    private static final int REQ_ALL = 31;
+    private static final int REQ_ALL = 31, REQ_ROLE = 32, REQ_SPECIAL = 33;
     private long lastNotifPush = 0;
     private volatile boolean visible = false, notifPending = false;
     void notifChanged() {
@@ -304,6 +304,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_ROLE || requestCode == REQ_SPECIAL) { js("window.onPerms&&window.onPerms()"); return; }
         if (requestCode == REQ_STT) {
             String txt = "";
             if (resultCode == RESULT_OK && data != null) {
@@ -357,6 +358,14 @@ public class MainActivity extends Activity {
         if (web != null) { web.onResume(); web.resumeTimers(); }
         startMediaWatch();
         visible = true;
+        if (KeepAliveService.wanted(this) && !KeepAliveService.running) KeepAliveService.start(this);
+        try {   // si el sistema desconectó el lector de notificaciones, pedir que lo vuelva a enlazar
+            if (MediaListener.instance == null && Build.VERSION.SDK_INT >= 24) {
+                String f = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+                if (f != null && f.contains(getPackageName()))
+                    android.service.notification.NotificationListenerService.requestRebind(new ComponentName(this, MediaListener.class));
+            }
+        } catch (Exception ignored) { }
         try { registerReceiver(powerReceiver, new IntentFilter(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)); } catch (Exception ignored) { }
         if (notifPending) { notifPending = false; notifChanged(); }
     }
@@ -576,6 +585,16 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    /** Liberar memoria cuando el sistema la pide: así HyperOS tiene menos motivos para cerrar el launcher. */
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        if (level >= TRIM_MEMORY_BACKGROUND || level == TRIM_MEMORY_RUNNING_LOW || level == TRIM_MEMORY_RUNNING_CRITICAL) {
+            try { iconBytes.trimToSize(iconBytes.maxSize() / 4); } catch (Exception ignored) { }
+            if (web != null && level >= TRIM_MEMORY_MODERATE) try { web.clearCache(false); } catch (Exception ignored) { }
+        }
+    }
+
     protected void onDestroy() {
         if (act == this) act = null;
         try { if (stt != null) stt.destroy(); } catch (Exception ignored) { }
@@ -857,6 +876,15 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setDefaultLauncher() {
             runOnUiThread(() -> {
+                try {   // Android 10+: diálogo nativo del sistema "¿Usar Aura como app de inicio?"
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        android.app.role.RoleManager rm = (android.app.role.RoleManager) getSystemService(Context.ROLE_SERVICE);
+                        if (rm != null && rm.isRoleAvailable(android.app.role.RoleManager.ROLE_HOME) && !rm.isRoleHeld(android.app.role.RoleManager.ROLE_HOME)) {
+                            startActivityForResult(rm.createRequestRoleIntent(android.app.role.RoleManager.ROLE_HOME), REQ_ROLE);
+                            return;
+                        }
+                    }
+                } catch (Exception ignored) { }
                 try {
                     startActivity(new Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
                 } catch (Exception e) {
@@ -1538,9 +1566,86 @@ public class MainActivity extends Activity {
                 o.put("sms", granted(Manifest.permission.READ_SMS));
                 o.put("notif", hasMediaAccess());
                 o.put("home", isDefaultLauncher());
-                o.put("gestures", GestureService.instance != null);
+                o.put("gestures", GestureService.instance != null || secureHas("enabled_accessibility_services", GestureService.class));
+                o.put("notifications", Build.VERSION.SDK_INT < 33 || granted("android.permission.POST_NOTIFICATIONS"));
+                PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+                o.put("battery", pm != null && pm.isIgnoringBatteryOptimizations(getPackageName()));
+                o.put("secure", granted("android.permission.WRITE_SECURE_SETTINGS"));
+                o.put("keepalive", KeepAliveService.wanted(MainActivity.this));
+                o.put("keepaliveRunning", KeepAliveService.running);
+                o.put("xiaomi", Build.MANUFACTURER != null && Build.MANUFACTURER.toLowerCase(Locale.ROOT).contains("xiaomi"));
             } catch (Exception ignored) { }
             return o.toString();
+        }
+
+        private boolean secureHas(String key, Class<?> cls) {
+            String v = Settings.Secure.getString(getContentResolver(), key);
+            return v != null && v.contains(getPackageName() + "/");
+        }
+
+        /** Ajustes especiales: abre directamente la pantalla exacta de cada uno. */
+        @JavascriptInterface
+        public void requestSpecial(String which) {
+            final String pkg = getPackageName();
+            runOnUiThread(() -> {
+                Intent i = null;
+                try {
+                    switch (which) {
+                        case "battery":
+                            i = new Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:" + pkg)); break;
+                        case "notif":
+                            if (Build.VERSION.SDK_INT >= 30) i = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_DETAIL_SETTINGS)
+                                    .putExtra(Settings.EXTRA_NOTIFICATION_LISTENER_COMPONENT_NAME, new ComponentName(MainActivity.this, MediaListener.class).flattenToString());
+                            else i = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+                            break;
+                        case "gestures":
+                            i = new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS); break;
+                        case "autostart":   // HyperOS / MIUI: inicio automático
+                            i = new Intent().setComponent(new ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity")); break;
+                        case "miuibattery": // HyperOS / MIUI: ahorro de batería -> Sin restricciones
+                            i = new Intent().setComponent(new ComponentName("com.miui.powerkeeper", "com.miui.powerkeeper.ui.HiddenAppsConfigActivity"))
+                                    .putExtra("package_name", pkg).putExtra("package_label", getString(R.string.app_name)); break;
+                        case "popup":       // HyperOS / MIUI: otros permisos (ventanas en segundo plano, pantalla de bloqueo)
+                            i = new Intent("miui.intent.action.APP_PERM_EDITOR").setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity")
+                                    .putExtra("extra_pkgname", pkg); break;
+                        default:
+                            i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg));
+                    }
+                    startActivityForResult(i, REQ_SPECIAL);
+                } catch (Exception e) {
+                    try { startActivityForResult(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + pkg)), REQ_SPECIAL); } catch (Exception ignored) { }
+                }
+            });
+        }
+
+        /** Con WRITE_SECURE_SETTINGS (se da una sola vez por ADB) se activan solos el lector de notificaciones y los gestos. */
+        @JavascriptInterface
+        public String autoGrant() {
+            JSONObject o = new JSONObject();
+            try {
+                if (!granted("android.permission.WRITE_SECURE_SETTINGS")) { o.put("ok", false); return o.toString(); }
+                android.content.ContentResolver cr = getContentResolver();
+                String nl = new ComponentName(MainActivity.this, MediaListener.class).flattenToString();
+                String cur = Settings.Secure.getString(cr, "enabled_notification_listeners");
+                if (cur == null || !cur.contains(nl)) { Settings.Secure.putString(cr, "enabled_notification_listeners", (cur == null || cur.isEmpty()) ? nl : cur + ":" + nl); o.put("notif", true); }
+                if (!getPackageName().endsWith(".jarvis")) {
+                    String ac = new ComponentName(MainActivity.this, GestureService.class).flattenToString();
+                    String a2 = Settings.Secure.getString(cr, "enabled_accessibility_services");
+                    if (a2 == null || !a2.contains(ac)) {
+                        Settings.Secure.putString(cr, "enabled_accessibility_services", (a2 == null || a2.isEmpty()) ? ac : a2 + ":" + ac);
+                        Settings.Secure.putString(cr, "accessibility_enabled", "1"); o.put("gestures", true);
+                    }
+                }
+                o.put("ok", true);
+            } catch (Exception e) { try { o.put("ok", false); o.put("err", e.getMessage()); } catch (Exception ignored) { } }
+            return o.toString();
+        }
+
+        /** Servicio persistente (mantener el launcher en memoria). */
+        @JavascriptInterface
+        public void setPersistent(boolean on) {
+            KeepAliveService.setWanted(MainActivity.this, on);
+            if (on) KeepAliveService.start(MainActivity.this); else KeepAliveService.stop(MainActivity.this);
         }
 
         @JavascriptInterface
@@ -1555,6 +1660,7 @@ public class MainActivity extends Activity {
                     case "phone": want.add(Manifest.permission.CALL_PHONE); break;
                     case "calllog": want.add(Manifest.permission.READ_CALL_LOG); break;
                     case "sms": want.add(Manifest.permission.READ_SMS); break;
+                    case "notifications": if (Build.VERSION.SDK_INT >= 33) want.add("android.permission.POST_NOTIFICATIONS"); break;
                 }
             }
             java.util.ArrayList<String> miss = new java.util.ArrayList<>();
